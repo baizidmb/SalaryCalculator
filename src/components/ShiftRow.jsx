@@ -15,6 +15,15 @@ import SmartTimeInput from './SmartTimeInput';
 import { calculateShiftDayHours, decimalToTimeString } from '../utils/salaryEngine';
 import { TRANSLATIONS } from '../utils/i18n';
 
+// Field-specific suggestion time arrays requested by user
+const SUGGESTIONS_SLOT1_START = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00'];
+const SUGGESTIONS_SLOT1_END   = ['15:00', '16:00', '17:00', '18:00'];
+const SUGGESTIONS_SLOT2_START = ['17:00', '18:00', '18:30', '19:00', '20:00'];
+const SUGGESTIONS_SLOT2_END   = ['21:00', '22:00', '23:00', '00:00'];
+
+const SUGGESTIONS_CONT_START  = ['07:00', '08:00', '09:00', '10:00', '11:00'];
+const SUGGESTIONS_CONT_END    = ['15:00', '16:00', '17:00', '18:00', '19:00'];
+
 export default function ShiftRow({
   day,
   shiftData,
@@ -80,7 +89,6 @@ export default function ShiftRow({
       ...shiftData,
       isOff: false
     });
-    // Auto-focus first input when activated
     setTimeout(() => {
       if (mode === 'continuous') {
         continuousStartRef.current?.focus();
@@ -244,11 +252,11 @@ export default function ShiftRow({
               </button>
             </div>
 
-            {/* Smart Inputs */}
+            {/* Smart Inputs with field-specific suggestions */}
             {mode === 'split' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 
-                {/* Slot 1 */}
+                {/* Slot 1: Start (7 to 12) & End (3 to 6 PM) */}
                 <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[10px] font-bold text-slate-500 uppercase">{t.slot1}</span>
                   <div className="flex items-center gap-1">
@@ -259,6 +267,7 @@ export default function ShiftRow({
                       onComplete={() => end1Ref.current?.focus()}
                       onEnterPress={() => end1Ref.current?.focus()}
                       placeholder="00:00"
+                      suggestions={SUGGESTIONS_SLOT1_START}
                       className="w-16"
                     />
                     <span className="text-slate-400 text-xs font-bold">→</span>
@@ -269,12 +278,13 @@ export default function ShiftRow({
                       onComplete={() => start2Ref.current?.focus()}
                       onEnterPress={() => start2Ref.current?.focus()}
                       placeholder="00:00"
+                      suggestions={SUGGESTIONS_SLOT1_END}
                       className="w-16"
                     />
                   </div>
                 </div>
 
-                {/* Slot 2 */}
+                {/* Slot 2: Start (5 to 8 PM) & End (9 to 12 PM) */}
                 <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[10px] font-bold text-slate-500 uppercase">{t.slot2}</span>
                   <div className="flex items-center gap-1">
@@ -285,6 +295,7 @@ export default function ShiftRow({
                       onComplete={() => end2Ref.current?.focus()}
                       onEnterPress={() => end2Ref.current?.focus()}
                       placeholder="00:00"
+                      suggestions={SUGGESTIONS_SLOT2_START}
                       className="w-16"
                     />
                     <span className="text-slate-400 text-xs font-bold">→</span>
@@ -295,6 +306,7 @@ export default function ShiftRow({
                       onComplete={handleNextDayJump}
                       onEnterPress={handleNextDayJump}
                       placeholder="00:00"
+                      suggestions={SUGGESTIONS_SLOT2_END}
                       className="w-16"
                     />
                   </div>
@@ -312,6 +324,7 @@ export default function ShiftRow({
                     onComplete={() => continuousEndRef.current?.focus()}
                     onEnterPress={() => continuousEndRef.current?.focus()}
                     placeholder="00:00"
+                    suggestions={SUGGESTIONS_CONT_START}
                     className="w-20"
                   />
                   <span className="text-slate-400 text-xs font-bold">→</span>
@@ -322,6 +335,7 @@ export default function ShiftRow({
                     onComplete={handleNextDayJump}
                     onEnterPress={handleNextDayJump}
                     placeholder="00:00"
+                    suggestions={SUGGESTIONS_CONT_END}
                     className="w-20"
                   />
                 </div>
@@ -330,7 +344,7 @@ export default function ShiftRow({
 
           </div>
         ) : (
-          // DISABLED REST DAY BANNER (NO TIME INPUTS SHOWN)
+          // DISABLED REST DAY BANNER
           <div className="py-3 px-4 rounded-xl bg-slate-100/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-semibold">
               <Moon className="w-4 h-4 text-slate-400" />
@@ -485,11 +499,11 @@ export default function ShiftRow({
               </button>
             </div>
 
-            {/* Time inputs with auto-advance */}
+            {/* Time inputs with field-specific suggestions */}
             {mode === 'split' ? (
               <div className="flex flex-wrap items-center gap-2">
                 
-                {/* Slot 1 */}
+                {/* Slot 1: Start (7-12) & End (3-6 PM) */}
                 <div className="flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[10px] font-bold text-slate-400 uppercase">{t.slot1}</span>
                   <SmartTimeInput
@@ -499,6 +513,7 @@ export default function ShiftRow({
                     onComplete={() => end1Ref.current?.focus()}
                     onEnterPress={() => end1Ref.current?.focus()}
                     placeholder="00:00"
+                    suggestions={SUGGESTIONS_SLOT1_START}
                     className="w-16"
                   />
                   <span className="text-slate-400 text-xs font-bold">→</span>
@@ -509,6 +524,7 @@ export default function ShiftRow({
                     onComplete={() => start2Ref.current?.focus()}
                     onEnterPress={() => start2Ref.current?.focus()}
                     placeholder="00:00"
+                    suggestions={SUGGESTIONS_SLOT1_END}
                     className="w-16"
                   />
                 </div>
@@ -520,7 +536,7 @@ export default function ShiftRow({
                   </div>
                 )}
 
-                {/* Slot 2 */}
+                {/* Slot 2: Start (5-8 PM) & End (9-12 PM) */}
                 <div className="flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[10px] font-bold text-slate-400 uppercase">{t.slot2}</span>
                   <SmartTimeInput
@@ -530,6 +546,7 @@ export default function ShiftRow({
                     onComplete={() => end2Ref.current?.focus()}
                     onEnterPress={() => end2Ref.current?.focus()}
                     placeholder="00:00"
+                    suggestions={SUGGESTIONS_SLOT2_START}
                     className="w-16"
                   />
                   <span className="text-slate-400 text-xs font-bold">→</span>
@@ -540,6 +557,7 @@ export default function ShiftRow({
                     onComplete={handleNextDayJump}
                     onEnterPress={handleNextDayJump}
                     placeholder="00:00"
+                    suggestions={SUGGESTIONS_SLOT2_END}
                     className="w-16"
                   />
                 </div>
@@ -555,6 +573,7 @@ export default function ShiftRow({
                   onComplete={() => continuousEndRef.current?.focus()}
                   onEnterPress={() => continuousEndRef.current?.focus()}
                   placeholder="00:00"
+                  suggestions={SUGGESTIONS_CONT_START}
                   className="w-20"
                 />
                 <span className="text-slate-400 text-xs font-bold">→</span>
@@ -565,6 +584,7 @@ export default function ShiftRow({
                   onComplete={handleNextDayJump}
                   onEnterPress={handleNextDayJump}
                   placeholder="00:00"
+                  suggestions={SUGGESTIONS_CONT_END}
                   className="w-20"
                 />
               </div>
