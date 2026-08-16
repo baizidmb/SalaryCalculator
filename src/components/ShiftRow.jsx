@@ -7,11 +7,10 @@ import {
   Split, 
   AlignJustify,
   CheckCircle2,
-  Clock,
   RotateCcw,
   Sun
 } from 'lucide-react';
-import { calculateShiftDayHours, decimalToTimeString, adjustTime } from '../utils/salaryEngine';
+import { calculateShiftDayHours, decimalToTimeString } from '../utils/salaryEngine';
 import { TRANSLATIONS } from '../utils/i18n';
 
 export default function ShiftRow({
@@ -35,7 +34,7 @@ export default function ShiftRow({
   const handleFieldChange = (field, value) => {
     onChange(day.dateStr, {
       ...shiftData,
-      isOff: false, // Automatically turns the day ON when editing
+      isOff: false,
       [field]: value
     });
   };
@@ -44,7 +43,6 @@ export default function ShiftRow({
     const nextIsOff = !isOff;
     onChange(day.dateStr, {
       ...shiftData,
-      // If toggling ON and times are empty, provide defaults
       start1: shiftData?.start1 || '11:00',
       end1: shiftData?.end1 || '17:00',
       start2: shiftData?.start2 || '18:30',
@@ -61,54 +59,6 @@ export default function ShiftRow({
       mode: newMode,
       isOff: false
     });
-  };
-
-  // Quick 1-tap preset handlers (ALWAYS turns the day ON)
-  const handleApply8hStandard = () => {
-    onChange(day.dateStr, {
-      ...shiftData,
-      mode: 'continuous',
-      isOff: false,
-      continuousStart: '09:00',
-      continuousEnd: '17:00'
-    });
-  };
-
-  const handleApplySplitPreset = () => {
-    onChange(day.dateStr, {
-      ...shiftData,
-      mode: 'split',
-      isOff: false,
-      start1: '11:00',
-      end1: '17:00',
-      start2: '18:30',
-      end2: '23:00'
-    });
-  };
-
-  const handleApplySplit10h = () => {
-    onChange(day.dateStr, {
-      ...shiftData,
-      mode: 'split',
-      isOff: false,
-      start1: '10:00',
-      end1: '16:00',
-      start2: '18:00',
-      end2: '22:00'
-    });
-  };
-
-  // Stepper handlers to adjust shift end time
-  const handleAdjustEndTime = (deltaMinutes) => {
-    if (mode === 'continuous') {
-      const current = shiftData?.continuousEnd || '17:00';
-      const updated = adjustTime(current, deltaMinutes);
-      handleFieldChange('continuousEnd', updated);
-    } else {
-      const current = shiftData?.end2 || '23:00';
-      const updated = adjustTime(current, deltaMinutes);
-      handleFieldChange('end2', updated);
-    }
   };
 
   // Visual state styling
@@ -132,7 +82,7 @@ export default function ShiftRow({
   return (
     <div className={`rounded-2xl border transition-all duration-200 ${cardBorderAndBg}`}>
       
-      {/* 📱 MOBILE VIEW (< md) - TOUCH OPTIMIZED CARD */}
+      {/* 📱 MOBILE VIEW (< md) - CLEAN TOUCH CARD */}
       <div className="md:hidden p-3.5 space-y-3">
         
         {/* Header: Day number + Day Name + Status Pill + OFF Toggle */}
@@ -218,32 +168,6 @@ export default function ShiftRow({
             )}
           </button>
 
-        </div>
-
-        {/* Quick 1-Tap Presets Bar (Always available, turns day ON immediately) */}
-        <div className="flex items-center gap-1.5 pt-0.5 overflow-x-auto pb-1 scrollbar-none">
-          <span className="text-[10px] text-slate-400 font-semibold shrink-0">{t.presetsLabel}</span>
-          <button
-            onClick={handleApplySplitPreset}
-            className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shrink-0 shadow-sm"
-            title="11:00-17:00 & 18:30-23:00"
-          >
-            10.5h Split
-          </button>
-          <button
-            onClick={handleApply8hStandard}
-            className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 shrink-0"
-            title="09:00-17:00"
-          >
-            8h Norm
-          </button>
-          <button
-            onClick={handleApplySplit10h}
-            className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 shrink-0"
-            title="10:00-16:00 & 18:00-22:00"
-          >
-            10h Split
-          </button>
         </div>
 
         {/* Inputs Section */}
@@ -342,34 +266,6 @@ export default function ShiftRow({
                 </div>
               </div>
             )}
-
-            {/* Smart Steppers (+30m / -30m / +1h) */}
-            <div className="flex items-center justify-between pt-1 text-[11px] text-slate-500">
-              <span className="text-[10px] font-semibold">{t.stepperLabel}</span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleAdjustEndTime(-30)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-[10px] border border-slate-200 dark:border-slate-700 transition-colors"
-                >
-                  {t.minus30m}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAdjustEndTime(30)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-[10px] border border-slate-200 dark:border-slate-700 transition-colors"
-                >
-                  {t.plus30m}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAdjustEndTime(60)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-[10px] border border-slate-200 dark:border-slate-700 transition-colors"
-                >
-                  {t.plus1h}
-                </button>
-              </div>
-            </div>
 
           </div>
         ) : (
@@ -495,7 +391,7 @@ export default function ShiftRow({
           </div>
         </div>
 
-        {/* Inputs & Presets */}
+        {/* Inputs */}
         {!isOff ? (
           <div className="flex-1 flex flex-wrap items-center gap-2.5">
             
@@ -589,58 +485,13 @@ export default function ShiftRow({
               </div>
             )}
 
-            {/* Quick 1-Tap Presets on Desktop */}
-            <div className="flex items-center gap-1 text-[10px]">
-              <button
-                type="button"
-                onClick={handleApplySplitPreset}
-                className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/30 transition-colors shadow-sm"
-                title="11:00-17:00 & 18:30-23:00"
-              >
-                10.5h
-              </button>
-              <button
-                type="button"
-                onClick={handleApply8hStandard}
-                className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-medium border border-slate-200 dark:border-slate-700 transition-colors"
-                title="09:00-17:00"
-              >
-                8h
-              </button>
-              <button
-                type="button"
-                onClick={() => handleAdjustEndTime(30)}
-                className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[9px] border border-slate-200 dark:border-slate-700"
-                title="Add 30 minutes to end time"
-              >
-                +30m
-              </button>
-            </div>
-
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-between">
+          <div className="flex-1 flex items-center">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 text-xs font-semibold border border-slate-200 dark:border-slate-800/80 shadow-sm">
               <Moon className="w-3.5 h-3.5 text-slate-400" />
               {t.offDayLabel}
             </span>
-            <div className="flex items-center gap-1.5 text-[10px]">
-              <span className="text-slate-400">{t.presetsLabel}</span>
-              <button
-                type="button"
-                onClick={handleApplySplitPreset}
-                className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/30"
-              >
-                10.5h Split
-              </button>
-              <button
-                type="button"
-                onClick={handleApply8hStandard}
-                className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-              >
-                8h Norm
-              </button>
-            </div>
           </div>
         )}
 
