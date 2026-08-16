@@ -6,6 +6,7 @@ import SummaryCards from './components/SummaryCards';
 import DutyGrid from './components/DutyGrid';
 import TaxBreakdownModal from './components/TaxBreakdownModal';
 import SettingsModal from './components/SettingsModal';
+import GlitterCanvas from './components/GlitterCanvas';
 
 import { getDaysInMonth, getMonthlyNormInfo } from './utils/romanianCalendar';
 import { calculateSalary, DEFAULT_GROSS_BASE, RON_EUR_DEFAULT_RATE } from './utils/salaryEngine';
@@ -332,7 +333,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col antialiased">
+    <div className="min-h-screen flex flex-col antialiased relative bg-[#FAF8F5] dark:bg-[#0B0E14] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+      
+      {/* Golden Glitter & Liquid Shimmer Canvas */}
+      <GlitterCanvas isDark={theme === 'dark'} />
       
       {/* Top Navigation & App Bar */}
       <Header

@@ -114,7 +114,7 @@ export default function MonthSelector({
       </div>
 
       {/* 12 Months Fast-Select Pill Row (Horizontal scroll on mobile) */}
-      <div className="flex overflow-x-auto pb-1 sm:pb-0 sm:grid sm:grid-cols-6 lg:grid-cols-12 gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 scrollbar-none">
+      <div className="flex overflow-x-auto pb-1 sm:pb-0 sm:grid sm:grid-cols-6 lg:grid-cols-12 gap-1.5 pt-2 border-t border-amber-200/60 dark:border-slate-800/60 scrollbar-none">
         {t.months.map((mName, idx) => {
           const mNum = idx + 1;
           const isSelected = mNum === selectedMonth;
@@ -124,8 +124,8 @@ export default function MonthSelector({
               onClick={() => onMonthChange(mNum)}
               className={`py-1.5 px-2.5 sm:px-2 text-xs font-semibold rounded-xl transition-all duration-150 text-center shrink-0 sm:shrink ${
                 isSelected
-                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-bold shadow-sm shadow-cyan-600/30 scale-[1.02]'
-                  : 'bg-white/70 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200/60 dark:border-slate-800/60'
+                  ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-slate-950 font-bold shadow-md shadow-amber-500/25 scale-[1.02]'
+                  : 'bg-white/80 dark:bg-slate-950/40 hover:bg-amber-50/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-200 border border-amber-200/60 dark:border-slate-800/60'
               }`}
             >
               {mName.substring(0, 3)}
