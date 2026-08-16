@@ -10,9 +10,60 @@ import SettingsModal from './components/SettingsModal';
 import { getDaysInMonth, getMonthlyNormInfo } from './utils/romanianCalendar';
 import { calculateSalary, DEFAULT_GROSS_BASE, RON_EUR_DEFAULT_RATE } from './utils/salaryEngine';
 import { exportDutySheetPDF } from './utils/pdfExport';
+import { TRANSLATIONS } from './utils/i18n';
 
 export default function App() {
-  // Current local date defaults
+  // 1. Language State: Default English 'en', 1-tap toggle to 'ro'
+  const [lang, setLang] = useState(() => {
+    try {
+      return localStorage.getItem('shiftpay_lang') || 'en';
+    } catch {
+      return 'en';
+    }
+  });
+
+  // 2. Theme State: Default 'light' (Luminous Liquid White Glass), toggle to 'dark'
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('shiftpay_theme') || 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  // Apply theme class to document root element
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('shiftpay_theme', theme);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [theme]);
+
+  // Sync language to localStorage
+  const handleLangToggle = () => {
+    const newLang = lang === 'en' ? 'ro' : 'en';
+    setLang(newLang);
+    try {
+      localStorage.setItem('shiftpay_lang', newLang);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleThemeToggle = () => {
+    setTheme(t => t === 'light' ? 'dark' : 'light');
+  };
+
+  const t = TRANSLATIONS[lang];
+
+  // Calendar Year and Month
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear() || 2026);
   const [selectedMonth, setSelectedMonth] = useState((now.getMonth() + 1) || 8); // 1-12
@@ -38,7 +89,7 @@ export default function App() {
         baseGross: DEFAULT_GROSS_BASE,
         employeeName: 'ZidBhai Operator',
         companyName: 'ZidBhai Enterprise SRL',
-        position: 'Specialist Operațiuni',
+        position: 'Operations Specialist',
         eurRate: RON_EUR_DEFAULT_RATE
       };
     } catch {
@@ -46,7 +97,7 @@ export default function App() {
         baseGross: DEFAULT_GROSS_BASE,
         employeeName: 'ZidBhai Operator',
         companyName: 'ZidBhai Enterprise SRL',
-        position: 'Specialist Operațiuni',
+        position: 'Operations Specialist',
         eurRate: RON_EUR_DEFAULT_RATE
       };
     }
@@ -58,15 +109,15 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Generate calendar days for selected year/month
+  // Generate calendar days for selected year/month with active locale
   const days = useMemo(() => {
-    return getDaysInMonth(selectedYear, selectedMonth);
-  }, [selectedYear, selectedMonth]);
+    return getDaysInMonth(selectedYear, selectedMonth, lang);
+  }, [selectedYear, selectedMonth, lang]);
 
   // Monthly norm metadata
   const normInfo = useMemo(() => {
-    return getMonthlyNormInfo(selectedYear, selectedMonth);
-  }, [selectedYear, selectedMonth]);
+    return getMonthlyNormInfo(selectedYear, selectedMonth, lang);
+  }, [selectedYear, selectedMonth, lang]);
 
   // Load shifts for current year/month from localStorage
   useEffect(() => {
@@ -76,7 +127,6 @@ export default function App() {
       if (saved) {
         setShifts(JSON.parse(saved));
       } else {
-        // Initialize default: weekdays 09:00 - 17:00 (8h), weekends OFF
         const initialShifts = {};
         days.forEach(d => {
           if (d.isWeekend) {
@@ -91,7 +141,6 @@ export default function App() {
               continuousEnd: ''
             };
           } else {
-            // Default 8h continuous or split
             initialShifts[d.dateStr] = {
               mode: 'continuous',
               isOff: false,
@@ -111,7 +160,7 @@ export default function App() {
     }
   }, [selectedYear, selectedMonth, days]);
 
-  // Save shifts to localStorage whenever modified
+  // Save shifts to localStorage
   const handleShiftChange = (dateStr, shiftData) => {
     const updated = {
       ...shifts,
@@ -208,7 +257,7 @@ export default function App() {
   };
 
   const handleClearMonth = () => {
-    if (window.confirm(`Sigur doriți să resetați toate turele pentru ${selectedMonth}/${selectedYear}?`)) {
+    if (window.confirm(t.confirmResetMonth)) {
       const updated = {};
       days.forEach(d => {
         updated[d.dateStr] = {
@@ -231,7 +280,6 @@ export default function App() {
     const sourceShift = shifts[sourceDateStr];
     if (!sourceShift) return;
 
-    // Find next day in calendar
     const currentIdx = days.findIndex(d => d.dateStr === sourceDateStr);
     if (currentIdx >= 0 && currentIdx < days.length - 1) {
       const nextDay = days[currentIdx + 1];
@@ -247,7 +295,7 @@ export default function App() {
     }
   };
 
-  // Perform full calculations
+  // Perform calculations
   const calcResult = useMemo(() => {
     return calculateSalary({
       baseGross: settings.baseGross,
@@ -258,7 +306,7 @@ export default function App() {
     });
   }, [settings.baseGross, normInfo.normHours, days, shifts, toggles]);
 
-  // Export PDF Trigger
+  // Export PDF
   const handleExportPDF = () => {
     setIsExporting(true);
     setTimeout(() => {
@@ -271,11 +319,12 @@ export default function App() {
           calcResult,
           employeeName: settings.employeeName,
           companyName: settings.companyName,
-          position: settings.position
+          position: settings.position,
+          lang
         });
       } catch (err) {
         console.error('Error generating PDF:', err);
-        alert('A apărut o eroare la generarea fișierului PDF.');
+        alert(lang === 'ro' ? 'Eroare la generarea fișierului PDF.' : 'Error generating PDF file.');
       } finally {
         setIsExporting(false);
       }
@@ -283,10 +332,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col antialiased">
+    <div className="min-h-screen flex flex-col antialiased">
       
-      {/* Top Header */}
+      {/* Top Navigation & App Bar */}
       <Header
+        lang={lang}
+        onLangToggle={handleLangToggle}
+        theme={theme}
+        onThemeToggle={handleThemeToggle}
         onOpenInfo={() => setIsTaxModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onExportPDF={handleExportPDF}
@@ -295,40 +348,43 @@ export default function App() {
         isExporting={isExporting}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* Main Responsive Body Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
-        {/* 1. Month Selector & Norm Info */}
+        {/* 1. Month Navigation & Norm Breakdown */}
         <section>
           <MonthSelector
             selectedYear={selectedYear}
             selectedMonth={selectedMonth}
             onYearChange={setSelectedYear}
             onMonthChange={setSelectedMonth}
+            lang={lang}
           />
         </section>
 
-        {/* 2. Financial Summary & Hours Cards */}
+        {/* 2. Financial Hero & Hours Breakdown Cards */}
         <section>
           <SummaryCards
             calcResult={calcResult}
             currency={currency}
             onCurrencyToggle={() => setCurrency(c => c === 'RON' ? 'EUR' : 'RON')}
             onOpenTaxDetails={() => setIsTaxModalOpen(true)}
+            lang={lang}
           />
         </section>
 
-        {/* 3. Allowance Toggle Switches */}
+        {/* 3. Independent Allowance Toggles */}
         <section>
           <AllowanceToggles
             toggles={toggles}
             onToggleChange={handleToggleChange}
             calcResult={calcResult}
             currency={currency}
+            lang={lang}
           />
         </section>
 
-        {/* 4. Duty Sheet & Shift Grid */}
+        {/* 4. Duty Sheet & Shift Logging Grid */}
         <section>
           <DutyGrid
             days={days}
@@ -339,19 +395,22 @@ export default function App() {
             onSetWeekendsOff={handleSetWeekendsOff}
             onClearMonth={handleClearMonth}
             onDuplicateRow={handleDuplicateRow}
+            lang={lang}
           />
         </section>
 
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
+      <footer className="w-full border-t border-slate-200/80 dark:border-slate-900 bg-white/60 dark:bg-slate-950/80 py-5 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>
-            © {selectedYear} <strong>ZidBhai ShiftPay</strong> // Romanian Duty Sheet & Smart Salary Calculator.
+            © {selectedYear} <strong>{t.appTitle}</strong> // {t.appSubtitle}.
           </p>
-          <p className="text-[11px] text-slate-600">
-            Conform Codul Muncii (Legea 53/2003) & Codul Fiscal (Legea 227/2015).
+          <p className="text-[11px] text-slate-400 dark:text-slate-600">
+            {lang === 'ro' 
+              ? 'Conform Codul Muncii (Legea 53/2003) & Codul Fiscal (Legea 227/2015).' 
+              : 'Compliant with Romanian Labor Code (Law 53/2003) & Fiscal Code (Law 227/2015).'}
           </p>
         </div>
       </footer>
@@ -362,6 +421,7 @@ export default function App() {
         onClose={() => setIsTaxModalOpen(false)}
         calcResult={calcResult}
         currency={currency}
+        lang={lang}
       />
 
       <SettingsModal
@@ -369,6 +429,7 @@ export default function App() {
         onClose={() => setIsSettingsModalOpen(false)}
         settings={settings}
         onSave={handleSaveSettings}
+        lang={lang}
       />
 
     </div>

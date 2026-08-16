@@ -5,13 +5,11 @@ import {
   Trash2, 
   Sun, 
   Split, 
-  Clock, 
-  Filter, 
-  CheckCheck,
-  RefreshCw
+  Clock 
 } from 'lucide-react';
 import ShiftRow from './ShiftRow';
 import { calculateShiftDayHours } from '../utils/salaryEngine';
+import { TRANSLATIONS } from '../utils/i18n';
 
 export default function DutyGrid({
   days,
@@ -21,9 +19,11 @@ export default function DutyGrid({
   onBulkFillSplitTemplate,
   onSetWeekendsOff,
   onClearMonth,
-  onDuplicateRow
+  onDuplicateRow,
+  lang = 'en'
 }) {
   const [filterMode, setFilterMode] = useState('all'); // 'all' | 'worked' | 'holidays_weekends'
+  const t = TRANSLATIONS[lang];
 
   const filteredDays = days.filter(d => {
     if (filterMode === 'all') return true;
@@ -40,105 +40,105 @@ export default function DutyGrid({
   });
 
   return (
-    <div className="w-full glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800/80 shadow-card-glass space-y-5">
+    <div className="w-full liquid-glass rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
       
-      {/* Top Toolbar: Title & Filter Tabs & Bulk Actions */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+      {/* Top Toolbar: Title & Filter Tabs */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
         
         {/* Title */}
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-            <Calendar className="w-5 h-5" />
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-100">
-              Foaie de Pontaj & Evidență Zilnică a Orelor
+            <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">
+              {t.dutySheetTitle}
             </h3>
-            <p className="text-xs text-slate-400">
-              Înregistrează intervalele de lucru, ture frânte (split) și zile libere
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+              {t.dutySheetSubtitle}
             </p>
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 shrink-0 self-start xl:self-auto">
+        {/* Filter Tabs (Horizontal scroll on mobile) */}
+        <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-start xl:self-auto overflow-x-auto max-w-full shadow-sm scrollbar-none">
           <button
             onClick={() => setFilterMode('all')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shrink-0 touch-target ${
               filterMode === 'all'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            Toate ({days.length})
+            {t.allDays} ({days.length})
           </button>
 
           <button
             onClick={() => setFilterMode('worked')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shrink-0 touch-target ${
               filterMode === 'worked'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            Doar Lucrate
+            {t.workedDays}
           </button>
 
           <button
             onClick={() => setFilterMode('holidays_weekends')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shrink-0 touch-target ${
               filterMode === 'holidays_weekends'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            Weekend / Sărbători
+            {t.weekendHolidays}
           </button>
         </div>
 
       </div>
 
-      {/* Bulk Action Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 text-xs bg-slate-950/40 p-3 rounded-xl border border-slate-800/50">
-        <span className="text-slate-400 font-semibold flex items-center gap-1.5 pr-2">
-          <Wand2 className="w-3.5 h-3.5 text-cyan-400" /> Acțiuni Rapide:
+      {/* Bulk Action Toolbar (Horizontal scroll / responsive wrap) */}
+      <div className="flex flex-wrap items-center gap-2 text-xs bg-white/50 dark:bg-slate-950/40 p-2.5 sm:p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/50 shadow-sm">
+        <span className="text-slate-600 dark:text-slate-400 font-semibold flex items-center gap-1.5 pr-1">
+          <Wand2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" /> {t.quickActions}
         </span>
 
         <button
           onClick={onBulkFillWeekdaysStandard}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 transition-colors"
-          title="Completează automat toate zilele lucrătoare cu tura 09:00 - 17:00 (8h)"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-sm transition-colors touch-target"
+          title="Auto-fill 8h standard weekdays"
         >
-          <Clock className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Normă Standard (8h Luni-Vineri)</span>
+          <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>{t.fillStandardWeekdays}</span>
         </button>
 
         <button
           onClick={onBulkFillSplitTemplate}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 transition-colors"
-          title="Completează tura frântă 11:00-17:00 & 18:30-23:00 (10.5h)"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-sm transition-colors touch-target"
+          title="Apply split shift template"
         >
-          <Split className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Template Split (10.5h)</span>
+          <Split className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+          <span>{t.fillSplitTemplate}</span>
         </button>
 
         <button
           onClick={onSetWeekendsOff}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 transition-colors"
-          title="Setează toate sâmbetele și duminicile ca zile OFF"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-sm transition-colors touch-target"
+          title="Mark all weekends as OFF"
         >
-          <Sun className="w-3.5 h-3.5 text-amber-400" />
-          <span>Weekenduri OFF</span>
+          <Sun className="w-3.5 h-3.5 text-amber-500" />
+          <span>{t.setWeekendsOff}</span>
         </button>
 
-        <div className="ml-auto">
+        <div className="w-full sm:w-auto sm:ml-auto mt-1 sm:mt-0">
           <button
             onClick={onClearMonth}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 hover:text-rose-200 border border-rose-800/40 transition-colors"
-            title="Șterge toate înregistrările din această lună"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 transition-colors touch-target"
+            title="Reset month logs"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Resetează Pontaj</span>
+            <span>{t.resetMonth}</span>
           </button>
         </div>
       </div>
@@ -146,8 +146,8 @@ export default function DutyGrid({
       {/* Grid of Days */}
       <div className="space-y-2.5">
         {filteredDays.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 text-sm">
-            Nicio zi nu corespunde filtrului selectat.
+          <div className="text-center py-10 text-slate-400 text-xs sm:text-sm">
+            {t.noDaysMatchingFilter}
           </div>
         ) : (
           filteredDays.map((day, idx) => {
@@ -172,6 +172,7 @@ export default function DutyGrid({
                 onChange={onShiftChange}
                 onDuplicateToNext={onDuplicateRow}
                 isNextAvailable={isNextAvailable}
+                lang={lang}
               />
             );
           })
@@ -179,12 +180,12 @@ export default function DutyGrid({
       </div>
 
       {/* Bottom Summary Bar */}
-      <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+      <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
         <div>
-          Afișate <strong className="text-slate-200">{filteredDays.length}</strong> din <strong className="text-slate-200">{days.length}</strong> zile ale lunii.
+          {t.showingDays} <strong className="text-slate-800 dark:text-slate-200">{filteredDays.length}</strong> {t.ofDays} <strong className="text-slate-800 dark:text-slate-200">{days.length}</strong> {t.daysInMonth}
         </div>
-        <div className="flex items-center gap-2">
-          <span>Datele se salvează automat în browser (`localStorage`).</span>
+        <div>
+          <span>{t.autoSaveNotice}</span>
         </div>
       </div>
 

@@ -1,7 +1,10 @@
 /**
  * Romanian Calendar & Legal Holidays Engine
  * Implements Romanian Labor Code (Codul Muncii - Art. 139) & Astronomical Orthodox Computus
+ * Supports English & Romanian locale representations
  */
+
+import { TRANSLATIONS } from './i18n.js';
 
 export const MONTH_NAMES_RO = [
   'Ianuarie', 'Februarie', 'Martie', 'Aprilie',
@@ -18,6 +21,11 @@ export const MONTH_NAMES_EN = [
 export const DAY_NAMES_SHORT_RO = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 export const DAY_NAMES_FULL_RO = [
   'Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'
+];
+
+export const DAY_NAMES_SHORT_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const DAY_NAMES_FULL_EN = [
+  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 ];
 
 /**
@@ -43,34 +51,36 @@ export function getOrthodoxEasterDate(year) {
 /**
  * Retrieves all Romanian official statutory holidays for a specific year
  * @param {number} year 
+ * @param {string} lang 'en' | 'ro'
  * @returns {Array<{dateStr: string, name: string, shortName: string}>}
  */
-export function getRomanianHolidays(year) {
+export function getRomanianHolidays(year, lang = 'en') {
   const holidays = [];
+  const isRo = lang === 'ro';
 
-  const addHoliday = (month, day, name, shortName) => {
+  const addHoliday = (month, day, nameRo, nameEn, shortNameRo, shortNameEn) => {
     const mStr = String(month).padStart(2, '0');
     const dStr = String(day).padStart(2, '0');
     holidays.push({
       dateStr: `${year}-${mStr}-${dStr}`,
-      name,
-      shortName: shortName || name
+      name: isRo ? nameRo : nameEn,
+      shortName: isRo ? (shortNameRo || nameRo) : (shortNameEn || nameEn)
     });
   };
 
   // Fixed Romanian Legal Holidays (Art. 139 Codul Muncii)
-  addHoliday(1, 1, 'Anul Nou - Ziua 1', 'Anul Nou');
-  addHoliday(1, 2, 'Anul Nou - Ziua 2', 'Anul Nou');
-  addHoliday(1, 6, 'Boboteaza (Botezul Domnului)', 'Boboteaza');
-  addHoliday(1, 7, 'Sfântul Ioan Botezătorul', 'Sf. Ioan');
-  addHoliday(1, 24, 'Ziua Unirii Principatelor Române', 'Mica Unire');
-  addHoliday(5, 1, 'Ziua Muncii', '1 Mai');
-  addHoliday(6, 1, 'Ziua Copilului', '1 Iunie');
-  addHoliday(8, 15, 'Adormirea Maicii Domnului (Sf. Maria)', 'Sf. Maria');
-  addHoliday(11, 30, 'Sfântul Andrei', 'Sf. Andrei');
-  addHoliday(12, 1, 'Ziua Națională a României', '1 Decembrie');
-  addHoliday(12, 25, 'Crăciunul - Ziua 1', 'Crăciun 1');
-  addHoliday(12, 26, 'Crăciunul - Ziua 2', 'Crăciun 2');
+  addHoliday(1, 1, 'Anul Nou - Ziua 1', 'New Year\'s Day 1', 'Anul Nou', 'New Year 1');
+  addHoliday(1, 2, 'Anul Nou - Ziua 2', 'New Year\'s Day 2', 'Anul Nou', 'New Year 2');
+  addHoliday(1, 6, 'Boboteaza (Botezul Domnului)', 'Epiphany (Boboteaza)', 'Boboteaza', 'Epiphany');
+  addHoliday(1, 7, 'Sfântul Ioan Botezătorul', 'St. John the Baptist', 'Sf. Ioan', 'St. John');
+  addHoliday(1, 24, 'Ziua Unirii Principatelor Române', 'Union of Romanian Principalities', 'Mica Unire', 'Union Day');
+  addHoliday(5, 1, 'Ziua Muncii', 'Labor Day', '1 Mai', 'Labor Day');
+  addHoliday(6, 1, 'Ziua Copilului', 'Children\'s Day', '1 Iunie', 'Kids Day');
+  addHoliday(8, 15, 'Adormirea Maicii Domnului (Sf. Maria)', 'Dormition of the Theotokos', 'Sf. Maria', 'St. Mary');
+  addHoliday(11, 30, 'Sfântul Andrei', 'St. Andrew\'s Day', 'Sf. Andrei', 'St. Andrew');
+  addHoliday(12, 1, 'Ziua Națională a României', 'Great Union Day (National Day)', '1 Decembrie', 'National Day');
+  addHoliday(12, 25, 'Crăciunul - Ziua 1', 'Christmas Day 1', 'Crăciun 1', 'Christmas 1');
+  addHoliday(12, 26, 'Crăciunul - Ziua 2', 'Christmas Day 2', 'Crăciun 2', 'Christmas 2');
 
   // Dynamic Orthodox Holidays calculated from Easter
   const easterSun = getOrthodoxEasterDate(year);
@@ -81,7 +91,9 @@ export function getRomanianHolidays(year) {
     goodFriday.getUTCMonth() + 1,
     goodFriday.getUTCDate(),
     'Vinerea Mare (Vinerea Patimilor)',
-    'Vinerea Mare'
+    'Good Friday (Orthodox)',
+    'Vinerea Mare',
+    'Good Friday'
   );
 
   // Orthodox Easter Day 1 (Duminica Paștelui)
@@ -89,7 +101,9 @@ export function getRomanianHolidays(year) {
     easterSun.getUTCMonth() + 1,
     easterSun.getUTCDate(),
     'Paștele Ortodox - Ziua 1',
-    'Paște 1'
+    'Orthodox Easter Sunday',
+    'Paște 1',
+    'Easter 1'
   );
 
   // Orthodox Easter Day 2 (A doua zi de Paște)
@@ -98,7 +112,9 @@ export function getRomanianHolidays(year) {
     easterMon.getUTCMonth() + 1,
     easterMon.getUTCDate(),
     'Paștele Ortodox - Ziua 2',
-    'Paște 2'
+    'Orthodox Easter Monday',
+    'Paște 2',
+    'Easter 2'
   );
 
   // Pentecost Day 1 (Rusalii - Duminică, 49 days after Easter)
@@ -107,7 +123,9 @@ export function getRomanianHolidays(year) {
     rusaliiSun.getUTCMonth() + 1,
     rusaliiSun.getUTCDate(),
     'Rusalii - Ziua 1 (Pogorârea Sf. Duh)',
-    'Rusalii 1'
+    'Pentecost Sunday (Rusalii)',
+    'Rusalii 1',
+    'Pentecost 1'
   );
 
   // Pentecost Day 2 (Rusalii - Luni, 50 days after Easter)
@@ -116,7 +134,9 @@ export function getRomanianHolidays(year) {
     rusaliiMon.getUTCMonth() + 1,
     rusaliiMon.getUTCDate(),
     'Rusalii - Ziua 2 (Sfânta Treime)',
-    'Rusalii 2'
+    'Pentecost Monday (Rusalii)',
+    'Rusalii 2',
+    'Pentecost 2'
   );
 
   return holidays;
@@ -125,13 +145,14 @@ export function getRomanianHolidays(year) {
 /**
  * Checks if a specific date string (YYYY-MM-DD) is a Romanian statutory holiday
  * @param {string} dateStr YYYY-MM-DD
+ * @param {string} lang 'en' | 'ro'
  * @returns {object|null} Holiday object if holiday, else null
  */
-export function getHolidayForDate(dateStr) {
+export function getHolidayForDate(dateStr, lang = 'en') {
   if (!dateStr) return null;
   const [yearStr] = dateStr.split('-');
   const year = parseInt(yearStr, 10);
-  const holidays = getRomanianHolidays(year);
+  const holidays = getRomanianHolidays(year, lang);
   return holidays.find(h => h.dateStr === dateStr) || null;
 }
 
@@ -139,13 +160,17 @@ export function getHolidayForDate(dateStr) {
  * Generates full day structure for a month
  * @param {number} year 
  * @param {number} month 1-12
+ * @param {string} lang 'en' | 'ro'
  * @returns {Array<object>} List of day metadata objects
  */
-export function getDaysInMonth(year, month) {
+export function getDaysInMonth(year, month, lang = 'en') {
   const days = [];
   const totalDays = new Date(year, month, 0).getDate();
-  const holidays = getRomanianHolidays(year);
+  const holidays = getRomanianHolidays(year, lang);
   const holidayMap = new Map(holidays.map(h => [h.dateStr, h]));
+
+  const shortNames = lang === 'ro' ? DAY_NAMES_SHORT_RO : DAY_NAMES_SHORT_EN;
+  const fullNames = lang === 'ro' ? DAY_NAMES_FULL_RO : DAY_NAMES_FULL_EN;
 
   for (let day = 1; day <= totalDays; day++) {
     const dStr = String(day).padStart(2, '0');
@@ -168,8 +193,8 @@ export function getDaysInMonth(year, month) {
       dayNumber: day,
       dateStr,
       dayOfWeek,
-      dayNameShort: DAY_NAMES_SHORT_RO[dayOfWeek],
-      dayNameFull: DAY_NAMES_FULL_RO[dayOfWeek],
+      dayNameShort: shortNames[dayOfWeek],
+      dayNameFull: fullNames[dayOfWeek],
       isWeekend,
       isSaturday,
       isSunday,
@@ -186,10 +211,11 @@ export function getDaysInMonth(year, month) {
  * Calculates the monthly standard norm (working days * 8h)
  * @param {number} year 
  * @param {number} month 1-12
+ * @param {string} lang 'en' | 'ro'
  * @returns {{ workingDays: number, normHours: number, totalDays: number, weekendDays: number, holidayDays: number }}
  */
-export function getMonthlyNormInfo(year, month) {
-  const days = getDaysInMonth(year, month);
+export function getMonthlyNormInfo(year, month, lang = 'en') {
+  const days = getDaysInMonth(year, month, lang);
   let workingDays = 0;
   let weekendDays = 0;
   let holidayDays = 0;

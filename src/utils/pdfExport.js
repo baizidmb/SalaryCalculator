@@ -1,10 +1,10 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { MONTH_NAMES_RO } from './romanianCalendar';
-import { formatCurrency, calculateShiftDayHours } from './salaryEngine';
+import { MONTH_NAMES_RO, MONTH_NAMES_EN, DAY_NAMES_FULL_RO, DAY_NAMES_FULL_EN } from './romanianCalendar';
+import { calculateShiftDayHours } from './salaryEngine';
 
 /**
- * Generates and downloads a Romanian Duty Sheet & Payslip PDF (Foaie Colectivă de Prezență & Fluturaș Salariu)
+ * Generates and downloads a Romanian Duty Sheet & Payslip PDF (Bilingual EN/RO)
  * @param {object} params
  */
 export function exportDutySheetPDF({
@@ -13,9 +13,10 @@ export function exportDutySheetPDF({
   days,
   shifts,
   calcResult,
-  employeeName = 'Angajat',
+  employeeName = 'Employee',
   companyName = 'ZidBhai Enterprise SRL',
-  position = 'Specialist Operațiuni'
+  position = 'Operations Specialist',
+  lang = 'en'
 }) {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -23,10 +24,10 @@ export function exportDutySheetPDF({
     format: 'a4'
   });
 
-  const monthName = MONTH_NAMES_RO[month - 1];
+  const isRo = lang === 'ro';
+  const monthName = isRo ? MONTH_NAMES_RO[month - 1] : MONTH_NAMES_EN[month - 1];
   const primaryColor = [6, 182, 212];    // Neon Cyan #06b6d4
   const darkColor = [15, 23, 42];        // Deep Slate #0f172a
-  const emeraldColor = [16, 185, 129];   // Emerald #10b981
   const grayColor = [100, 116, 139];
 
   // Header Background bar
@@ -46,18 +47,31 @@ export function exportDutySheetPDF({
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(6, 182, 212);
-  doc.text('FOAIE DE PONTAJ & FLUTURAȘ DE SALARIU // ROMANIA FISCAL CODE', 14, 21);
+  doc.text(
+    isRo 
+      ? 'FOAIE DE PONTAJ & FLUTURAȘ DE SALARIU // CODUL FISCAL RO' 
+      : 'DUTY TIMESHEET & SALARY PAYSLIP // ROMANIAN FISCAL CODE', 
+    14, 
+    21
+  );
 
   // Period Badge
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(255, 255, 255);
-  doc.text(`LUNA: ${monthName.toUpperCase()} ${year}`, 196, 16, { align: 'right' });
+  doc.text(`${isRo ? 'LUNA' : 'PERIOD'}: ${monthName.toUpperCase()} ${year}`, 196, 16, { align: 'right' });
 
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(148, 163, 184);
-  doc.text(`Normă Lunar: ${calcResult.normHours} ore (${calcResult.normHours / 8} zile lucrătoare)`, 196, 22, { align: 'right' });
+  doc.text(
+    isRo 
+      ? `Normă Lunară: ${calcResult.normHours} ore (${calcResult.normHours / 8} zile lucrătoare)` 
+      : `Monthly Norm: ${calcResult.normHours} hrs (${calcResult.normHours / 8} standard workdays)`, 
+    196, 
+    22, 
+    { align: 'right' }
+  );
 
   // Metadata Card
   let currentY = 40;
@@ -65,11 +79,11 @@ export function exportDutySheetPDF({
   doc.setDrawColor(226, 232, 240);
   doc.roundedRect(14, currentY, 182, 18, 2, 2, 'FD');
 
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(...grayColor);
-  doc.text('ANGAJAT:', 18, currentY + 7);
-  doc.text('COMPANIE:', 80, currentY + 7);
-  doc.text('SALARIU BAZĂ BRUT:', 140, currentY + 7);
+  doc.text(isRo ? 'ANGAJAT:' : 'EMPLOYEE:', 18, currentY + 7);
+  doc.text(isRo ? 'COMPANIE:' : 'COMPANY:', 80, currentY + 7);
+  doc.text(isRo ? 'SALARIU BAZĂ BRUT:' : 'BASE GROSS CONTRACT:', 140, currentY + 7);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...darkColor);
@@ -83,13 +97,12 @@ export function exportDutySheetPDF({
   doc.setFillColor(241, 245, 249);
   doc.roundedRect(14, currentY, 182, 20, 2, 2, 'F');
 
-  // Mini summary blocks
   const metrics = [
-    { label: 'ORE LUCRATE', val: `${calcResult.totalWorkedHours}h / ${calcResult.normHours}h` },
-    { label: 'ORE WEEKEND', val: `${calcResult.weekendHours}h` },
-    { label: 'ORE SĂRBĂTOARE', val: `${calcResult.holidayHours}h` },
-    { label: 'ORE SUPLIMENTARE', val: `${calcResult.overtimeHours}h` },
-    { label: 'SALARIU NET', val: `${calcResult.netSalary.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} LEI`, highlight: true }
+    { label: isRo ? 'ORE LUCRATE' : 'TOTAL WORKED', val: `${calcResult.totalWorkedHours}h / ${calcResult.normHours}h` },
+    { label: isRo ? 'ORE WEEKEND' : 'WEEKEND HOURS', val: `${calcResult.weekendHours}h` },
+    { label: isRo ? 'ORE SĂRBĂTOARE' : 'HOLIDAY HOURS', val: `${calcResult.holidayHours}h` },
+    { label: isRo ? 'ORE SUPLIMENTARE' : 'OVERTIME HOURS', val: `${calcResult.overtimeHours}h` },
+    { label: isRo ? 'SALARIU NET' : 'NET TAKE-HOME', val: `${calcResult.netSalary.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} LEI`, highlight: true }
   ];
 
   metrics.forEach((m, idx) => {
@@ -118,19 +131,19 @@ export function exportDutySheetPDF({
     const shift = shifts[d.dateStr] || { isOff: d.isWeekend };
     const { workedHours, breakHours } = calculateShiftDayHours(shift);
 
-    let shiftType = 'LIBER (OFF)';
+    let shiftType = isRo ? 'LIBER (OFF)' : 'REST DAY (OFF)';
     let intervals = '-';
     let tags = [];
 
-    if (d.isHoliday) tags.push(d.holidayInfo ? d.holidayInfo.shortName : 'Sărbătoare');
-    if (d.isWeekend) tags.push('Weekend');
+    if (d.isHoliday) tags.push(d.holidayInfo ? d.holidayInfo.shortName : (isRo ? 'Sărbătoare' : 'Holiday'));
+    if (d.isWeekend) tags.push(isRo ? 'Weekend' : 'Weekend');
 
     if (!shift.isOff && workedHours > 0) {
       if (shift.mode === 'continuous') {
-        shiftType = 'Continuu';
+        shiftType = isRo ? 'Continuu' : 'Continuous';
         intervals = `${shift.continuousStart || '--'} - ${shift.continuousEnd || '--'}`;
       } else {
-        shiftType = 'Split (Pauză)';
+        shiftType = isRo ? 'Split (Pauză)' : 'Split Shift';
         const p1 = `${shift.start1 || '--'} - ${shift.end1 || '--'}`;
         const p2 = `${shift.start2 || '--'} - ${shift.end2 || '--'}`;
         intervals = `${p1} & ${p2}`;
@@ -144,13 +157,21 @@ export function exportDutySheetPDF({
       intervals,
       breakHours > 0 ? `${breakHours}h` : '-',
       workedHours > 0 ? `${workedHours.toFixed(1)}h` : '0.0h',
-      tags.join(' | ') || (d.isStandardWorkday ? 'Normă' : '-')
+      tags.join(' | ') || (d.isStandardWorkday ? (isRo ? 'Normă' : 'Standard') : '-')
     ];
   });
 
   autoTable(doc, {
     startY: currentY,
-    head: [['Zi', 'Zi Săpt.', 'Tip Tură', 'Intervale Orare', 'Pauză', 'Ore', 'Observații / Statut']],
+    head: [[
+      isRo ? 'Zi' : 'Day',
+      isRo ? 'Zi Săpt.' : 'Weekday',
+      isRo ? 'Tip Tură' : 'Shift Mode',
+      isRo ? 'Intervale Orare' : 'Time Intervals',
+      isRo ? 'Pauză' : 'Break',
+      isRo ? 'Ore' : 'Hours',
+      isRo ? 'Observații / Statut' : 'Status / Notes'
+    ]],
     body: tableRows,
     theme: 'grid',
     styles: {
@@ -169,26 +190,25 @@ export function exportDutySheetPDF({
     },
     columnStyles: {
       0: { halign: 'center', cellWidth: 10, fontStyle: 'bold' },
-      1: { halign: 'left', cellWidth: 22 },
+      1: { halign: 'left', cellWidth: 24 },
       2: { halign: 'center', cellWidth: 24 },
-      3: { halign: 'center', cellWidth: 48 },
-      4: { halign: 'center', cellWidth: 16 },
+      3: { halign: 'center', cellWidth: 46 },
+      4: { halign: 'center', cellWidth: 15 },
       5: { halign: 'center', cellWidth: 16, fontStyle: 'bold' },
-      6: { halign: 'left', cellWidth: 46 },
+      6: { halign: 'left', cellWidth: 47 },
     },
     alternateRowStyles: {
       fillColor: [248, 250, 252],
     },
     margin: { left: 14, right: 14 },
     didParseCell: (data) => {
-      // Highlight weekends & holidays
       const rowIdx = data.row.index;
       if (rowIdx >= 0 && rowIdx < days.length) {
         const day = days[rowIdx];
         if (day && day.isHoliday) {
-          data.cell.styles.fillColor = [254, 243, 199]; // Amber tint for holidays
+          data.cell.styles.fillColor = [254, 243, 199];
         } else if (day && day.isWeekend) {
-          data.cell.styles.fillColor = [241, 245, 249]; // Slate tint for weekends
+          data.cell.styles.fillColor = [241, 245, 249];
         }
       }
     }
@@ -196,7 +216,6 @@ export function exportDutySheetPDF({
 
   let finalY = doc.lastAutoTable.finalY + 8;
 
-  // Check if we need a new page for the fiscal waterfall and signatures
   if (finalY > 235) {
     doc.addPage();
     finalY = 20;
@@ -204,21 +223,21 @@ export function exportDutySheetPDF({
 
   // Fiscal Breakdown Table
   const taxRows = [
-    ['1. Salariu Bază Brut (Regular)', `${calcResult.regularGross.toFixed(2)} LEI`],
-    ['2. Spor Weekend (+30%)', `${calcResult.weekendBonus.toFixed(2)} LEI`],
-    ['3. Spor Sărbători Legale (+100%)', `${calcResult.holidayBonus.toFixed(2)} LEI`],
-    ['4. Plata Ore Suplimentare (+75%)', `${calcResult.overtimePay.toFixed(2)} LEI`],
-    ['VENIT BRUT TOTAL REALIZAT', `${calcResult.totalGross.toFixed(2)} LEI`],
-    ['  - CAS Pensie (25%)', `-${calcResult.cas.toFixed(2)} LEI`],
-    ['  - CASS Sănătate (10%)', `-${calcResult.cass.toFixed(2)} LEI`],
-    ['  = Bază Impozabilă', `${calcResult.taxableBase.toFixed(2)} LEI`],
-    ['  - Impozit pe Venit (10%)', `-${calcResult.impozit.toFixed(2)} LEI`],
-    ['SALARIU NET DE PLATĂ', `${calcResult.netSalary.toFixed(2)} LEI`],
+    [isRo ? '1. Salariu Bază Brut (Regular)' : '1. Regular Base Gross Pay', `${calcResult.regularGross.toFixed(2)} LEI`],
+    [isRo ? '2. Spor Weekend (+30%)' : '2. Weekend Bonus (+30%)', `${calcResult.weekendBonus.toFixed(2)} LEI`],
+    [isRo ? '3. Spor Sărbători Legale (+100%)' : '3. Statutory Holiday Bonus (+100%)', `${calcResult.holidayBonus.toFixed(2)} LEI`],
+    [isRo ? '4. Plata Ore Suplimentare (+75%)' : '4. Overtime Compensation (+75%)', `${calcResult.overtimePay.toFixed(2)} LEI`],
+    [isRo ? 'VENIT BRUT TOTAL REALIZAT' : 'TOTAL REALIZED GROSS EARNINGS', `${calcResult.totalGross.toFixed(2)} LEI`],
+    [isRo ? '  - CAS Pensie (25%)' : '  - CAS Pension Security (25%)', `-${calcResult.cas.toFixed(2)} LEI`],
+    [isRo ? '  - CASS Sănătate (10%)' : '  - CASS Health Insurance (10%)', `-${calcResult.cass.toFixed(2)} LEI`],
+    [isRo ? '  = Bază Impozabilă' : '  = Taxable Income Base', `${calcResult.taxableBase.toFixed(2)} LEI`],
+    [isRo ? '  - Impozit pe Venit (10%)' : '  - Personal Income Tax (10%)', `-${calcResult.impozit.toFixed(2)} LEI`],
+    [isRo ? 'SALARIU NET DE PLATĂ' : 'FINAL NET TAKE-HOME PAY', `${calcResult.netSalary.toFixed(2)} LEI`],
   ];
 
   autoTable(doc, {
     startY: finalY,
-    head: [['Element de Calcul Fiscal (Codul Fiscal)', 'Sumă (LEI)']],
+    head: [[isRo ? 'Element de Calcul Fiscal (Codul Fiscal)' : 'Fiscal Calculation Cascade (Romanian Fiscal Code)', isRo ? 'Sumă (LEI)' : 'Amount (LEI)']],
     body: taxRows,
     theme: 'plain',
     tableWidth: 120,
@@ -250,7 +269,7 @@ export function exportDutySheetPDF({
     }
   });
 
-  // Signatures box next to tax table
+  // Signatures box
   const sigX = 142;
   const sigY = finalY;
 
@@ -261,23 +280,28 @@ export function exportDutySheetPDF({
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...darkColor);
-  doc.text('CONFIRMARE & SEMNĂTURI', sigX + 4, sigY + 6);
+  doc.text(isRo ? 'CONFIRMARE & SEMNĂTURI' : 'APPROVAL & SIGNATURES', sigX + 4, sigY + 6);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(...grayColor);
-  doc.text('Întocmit Angajator:', sigX + 4, sigY + 15);
+  doc.text(isRo ? 'Întocmit Angajator:' : 'Employer Signature:', sigX + 4, sigY + 15);
   doc.line(sigX + 4, sigY + 24, sigX + 50, sigY + 24);
 
-  doc.text('Luat la cunoștință Angajat:', sigX + 4, sigY + 32);
+  doc.text(isRo ? 'Luat la cunoștință Angajat:' : 'Employee Signature:', sigX + 4, sigY + 32);
   doc.line(sigX + 4, sigY + 42, sigX + 50, sigY + 42);
 
   // Footer note
   doc.setFontSize(6.5);
   doc.setTextColor(148, 163, 184);
-  doc.text('Generat automat prin ZidBhai ShiftPay // Calculator Salarii România conform Codului Muncii și Codului Fiscal.', 14, 290);
+  doc.text(
+    isRo 
+      ? 'Generat automat prin ZidBhai ShiftPay // Calculator Salarii România conform Codului Muncii și Codului Fiscal.' 
+      : 'Generated via ZidBhai ShiftPay // Romanian Duty Sheet & Smart Salary Calculator under Romanian Labor & Fiscal Code.', 
+    14, 
+    290
+  );
 
-  // Save the PDF
-  const filename = `Pontaj_Salariu_${employeeName.replace(/\s+/g, '_')}_${monthName}_${year}.pdf`;
+  const filename = `ShiftPay_Timesheet_${employeeName.replace(/\s+/g, '_')}_${monthName}_${year}.pdf`;
   doc.save(filename);
 }
