@@ -142,31 +142,22 @@ export default function App() {
     return getMonthlyNormInfo(selectedYear, selectedMonth, lang);
   }, [selectedYear, selectedMonth, lang]);
 
-  // Load shifts for current year/month from localStorage
+  // Load shifts for current year/month from localStorage with full workday ON defaults
   useEffect(() => {
     const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
-        setShifts(JSON.parse(saved));
-      } else {
-        const initialShifts = {};
+        const loaded = JSON.parse(saved);
+        const merged = {};
         days.forEach(d => {
-          if (d.isWeekend) {
-            initialShifts[d.dateStr] = {
-              mode: 'split',
-              isOff: true,
-              start1: '',
-              end1: '',
-              start2: '',
-              end2: '',
-              continuousStart: '',
-              continuousEnd: ''
-            };
+          if (loaded[d.dateStr]) {
+            merged[d.dateStr] = loaded[d.dateStr];
           } else {
-            initialShifts[d.dateStr] = {
+            // Default: Weekdays are ON (isOff: false), Weekends are OFF (isOff: true)
+            merged[d.dateStr] = {
               mode: 'split',
-              isOff: false,
+              isOff: d.isWeekend,
               start1: '11:00',
               end1: '17:00',
               start2: '18:30',
@@ -176,26 +167,45 @@ export default function App() {
             };
           }
         });
+        setShifts(merged);
+      } else {
+        const initialShifts = {};
+        days.forEach(d => {
+          initialShifts[d.dateStr] = {
+            mode: 'split',
+            isOff: d.isWeekend, // Weekdays are ON (isOff: false), Weekends are OFF
+            start1: '11:00',
+            end1: '17:00',
+            start2: '18:30',
+            end2: '23:00',
+            continuousStart: '09:00',
+            continuousEnd: '17:00'
+          };
+        });
         setShifts(initialShifts);
+        localStorage.setItem(storageKey, JSON.stringify(initialShifts));
       }
-    } catch {
+    } catch (e) {
+      console.error('LocalStorage read error:', e);
       setShifts({});
     }
   }, [selectedYear, selectedMonth, days]);
 
-  // Save shifts to localStorage
+  // Save shifts to localStorage atomically
   const handleShiftChange = (dateStr, shiftData) => {
-    const updated = {
-      ...shifts,
-      [dateStr]: shiftData
-    };
-    setShifts(updated);
-    const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage write error:', e);
-    }
+    setShifts(prevShifts => {
+      const updated = {
+        ...prevShifts,
+        [dateStr]: shiftData
+      };
+      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch (e) {
+        console.error('LocalStorage write error:', e);
+      }
+      return updated;
+    });
   };
 
   // Toggle update & save
@@ -224,62 +234,71 @@ export default function App() {
 
   // Bulk Actions
   const handleBulkFillWeekdaysStandard = () => {
-    const updated = { ...shifts };
-    days.forEach(d => {
-      if (d.isStandardWorkday) {
-        updated[d.dateStr] = {
-          mode: 'continuous',
-          isOff: false,
-          continuousStart: '09:00',
-          continuousEnd: '17:00',
-          start1: '',
-          end1: '',
-          start2: '',
-          end2: ''
-        };
-      } else {
-        updated[d.dateStr] = {
-          ...updated[d.dateStr],
-          isOff: true
-        };
-      }
+    setShifts(prev => {
+      const updated = { ...prev };
+      days.forEach(d => {
+        if (d.isStandardWorkday) {
+          updated[d.dateStr] = {
+            mode: 'continuous',
+            isOff: false,
+            continuousStart: '09:00',
+            continuousEnd: '17:00',
+            start1: '',
+            end1: '',
+            start2: '',
+            end2: ''
+          };
+        } else {
+          updated[d.dateStr] = {
+            ...updated[d.dateStr],
+            isOff: true
+          };
+        }
+      });
+      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
     });
-    setShifts(updated);
-    localStorage.setItem(`shiftpay_shifts_${selectedYear}_${selectedMonth}`, JSON.stringify(updated));
   };
 
   const handleBulkFillSplitTemplate = () => {
-    const updated = { ...shifts };
-    days.forEach(d => {
-      if (d.isStandardWorkday) {
-        updated[d.dateStr] = {
-          mode: 'split',
-          isOff: false,
-          start1: '11:00',
-          end1: '17:00',
-          start2: '18:30',
-          end2: '23:00',
-          continuousStart: '',
-          continuousEnd: ''
-        };
-      }
+    setShifts(prev => {
+      const updated = { ...prev };
+      days.forEach(d => {
+        if (d.isStandardWorkday) {
+          updated[d.dateStr] = {
+            mode: 'split',
+            isOff: false,
+            start1: '11:00',
+            end1: '17:00',
+            start2: '18:30',
+            end2: '23:00',
+            continuousStart: '',
+            continuousEnd: ''
+          };
+        }
+      });
+      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
     });
-    setShifts(updated);
-    localStorage.setItem(`shiftpay_shifts_${selectedYear}_${selectedMonth}`, JSON.stringify(updated));
   };
 
   const handleSetWeekendsOff = () => {
-    const updated = { ...shifts };
-    days.forEach(d => {
-      if (d.isWeekend) {
-        updated[d.dateStr] = {
-          ...updated[d.dateStr],
-          isOff: true
-        };
-      }
+    setShifts(prev => {
+      const updated = { ...prev };
+      days.forEach(d => {
+        if (d.isWeekend) {
+          updated[d.dateStr] = {
+            ...updated[d.dateStr],
+            isOff: true
+          };
+        }
+      });
+      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      return updated;
     });
-    setShifts(updated);
-    localStorage.setItem(`shiftpay_shifts_${selectedYear}_${selectedMonth}`, JSON.stringify(updated));
   };
 
   const handleClearMonth = () => {
@@ -298,7 +317,8 @@ export default function App() {
         };
       });
       setShifts(updated);
-      localStorage.setItem(`shiftpay_shifts_${selectedYear}_${selectedMonth}`, JSON.stringify(updated));
+      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     }
   };
 
@@ -309,15 +329,18 @@ export default function App() {
     const currentIdx = days.findIndex(d => d.dateStr === sourceDateStr);
     if (currentIdx >= 0 && currentIdx < days.length - 1) {
       const nextDay = days[currentIdx + 1];
-      const updated = {
-        ...shifts,
-        [nextDay.dateStr]: {
-          ...sourceShift,
-          isOff: false
-        }
-      };
-      setShifts(updated);
-      localStorage.setItem(`shiftpay_shifts_${selectedYear}_${selectedMonth}`, JSON.stringify(updated));
+      setShifts(prev => {
+        const updated = {
+          ...prev,
+          [nextDay.dateStr]: {
+            ...sourceShift,
+            isOff: false
+          }
+        };
+        const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+        return updated;
+      });
     }
   };
 
@@ -327,15 +350,18 @@ export default function App() {
       const prevDay = days[currentIdx - 1];
       const prevShift = shifts[prevDay.dateStr];
       if (prevShift) {
-        const updated = {
-          ...shifts,
-          [targetDateStr]: {
-            ...prevShift,
-            isOff: false
-          }
-        };
-        setShifts(updated);
-        localStorage.setItem(`shiftpay_shifts_${selectedYear}_${selectedMonth}`, JSON.stringify(updated));
+        setShifts(prev => {
+          const updated = {
+            ...prev,
+            [targetDateStr]: {
+              ...prevShift,
+              isOff: false
+            }
+          };
+          const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
+          localStorage.setItem(storageKey, JSON.stringify(updated));
+          return updated;
+        });
       }
     }
   };

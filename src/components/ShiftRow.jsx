@@ -8,10 +8,8 @@ import {
   AlignJustify,
   CheckCircle2,
   Clock,
-  Plus,
-  Minus,
-  ArrowRight,
-  RotateCcw
+  RotateCcw,
+  Sun
 } from 'lucide-react';
 import { calculateShiftDayHours, decimalToTimeString, adjustTime } from '../utils/salaryEngine';
 import { TRANSLATIONS } from '../utils/i18n';
@@ -37,15 +35,23 @@ export default function ShiftRow({
   const handleFieldChange = (field, value) => {
     onChange(day.dateStr, {
       ...shiftData,
-      isOff: false,
+      isOff: false, // Automatically turns the day ON when editing
       [field]: value
     });
   };
 
   const handleToggleOff = () => {
+    const nextIsOff = !isOff;
     onChange(day.dateStr, {
       ...shiftData,
-      isOff: !isOff
+      // If toggling ON and times are empty, provide defaults
+      start1: shiftData?.start1 || '11:00',
+      end1: shiftData?.end1 || '17:00',
+      start2: shiftData?.start2 || '18:30',
+      end2: shiftData?.end2 || '23:00',
+      continuousStart: shiftData?.continuousStart || '09:00',
+      continuousEnd: shiftData?.continuousEnd || '17:00',
+      isOff: nextIsOff
     });
   };
 
@@ -57,7 +63,7 @@ export default function ShiftRow({
     });
   };
 
-  // Quick 1-tap preset handlers
+  // Quick 1-tap preset handlers (ALWAYS turns the day ON)
   const handleApply8hStandard = () => {
     onChange(day.dateStr, {
       ...shiftData,
@@ -116,7 +122,7 @@ export default function ShiftRow({
     cardBorderAndBg = 'border-dashed border-amber-300 dark:border-amber-600/60 bg-amber-50/25 dark:bg-amber-950/10';
   } else if (isOff) {
     // 🌙 REST / OFF STATE: Muted soft slate
-    cardBorderAndBg = 'border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/50 opacity-65';
+    cardBorderAndBg = 'border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/50 opacity-70';
   }
 
   if (day.isHoliday && isFilled) {
@@ -163,6 +169,10 @@ export default function ShiftRow({
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                     {t.pendingBadge}
                   </span>
+                ) : isOff ? (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    {t.restBadge}
+                  </span>
                 ) : null}
 
                 {day.isWeekend && (
@@ -188,44 +198,53 @@ export default function ShiftRow({
           {/* Quick OFF / Activate Toggle */}
           <button
             onClick={handleToggleOff}
-            className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target shrink-0 ${
+            className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target shrink-0 flex items-center gap-1 ${
               isOff
-                ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30'
-                : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-800'
+                ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+                : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
             }`}
+            title={isOff ? 'Turn day ON / Enable' : 'Set as OFF day'}
           >
-            {isOff ? t.activateDay : t.setOff}
+            {isOff ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t.activateDay}</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-slate-500" />
+                <span>{t.setOff}</span>
+              </>
+            )}
           </button>
 
         </div>
 
-        {/* Quick 1-Tap Presets Bar */}
-        {!isOff && (
-          <div className="flex items-center gap-1.5 pt-0.5 overflow-x-auto pb-1 scrollbar-none">
-            <span className="text-[10px] text-slate-400 font-semibold shrink-0">{t.presetsLabel}</span>
-            <button
-              onClick={handleApplySplitPreset}
-              className="px-2 py-1 text-[10px] font-bold rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shrink-0 shadow-sm"
-              title="11:00-17:00 & 18:30-23:00"
-            >
-              10.5h Split
-            </button>
-            <button
-              onClick={handleApply8hStandard}
-              className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 shrink-0"
-              title="09:00-17:00"
-            >
-              8h Norm
-            </button>
-            <button
-              onClick={handleApplySplit10h}
-              className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 shrink-0"
-              title="10:00-16:00 & 18:00-22:00"
-            >
-              10h Split
-            </button>
-          </div>
-        )}
+        {/* Quick 1-Tap Presets Bar (Always available, turns day ON immediately) */}
+        <div className="flex items-center gap-1.5 pt-0.5 overflow-x-auto pb-1 scrollbar-none">
+          <span className="text-[10px] text-slate-400 font-semibold shrink-0">{t.presetsLabel}</span>
+          <button
+            onClick={handleApplySplitPreset}
+            className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shrink-0 shadow-sm"
+            title="11:00-17:00 & 18:30-23:00"
+          >
+            10.5h Split
+          </button>
+          <button
+            onClick={handleApply8hStandard}
+            className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 shrink-0"
+            title="09:00-17:00"
+          >
+            8h Norm
+          </button>
+          <button
+            onClick={handleApplySplit10h}
+            className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700 shrink-0"
+            title="10:00-16:00 & 18:00-22:00"
+          >
+            10h Split
+          </button>
+        </div>
 
         {/* Inputs Section */}
         {!isOff ? (
@@ -354,9 +373,17 @@ export default function ShiftRow({
 
           </div>
         ) : (
-          <div className="py-2 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
-            <Moon className="w-3.5 h-3.5 text-slate-400" />
-            <span>{t.offDayLabel}</span>
+          <div className="py-2.5 px-3 rounded-xl bg-slate-100/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Moon className="w-3.5 h-3.5 text-slate-400" />
+              <span>{t.offDayLabel}</span>
+            </div>
+            <button
+              onClick={handleToggleOff}
+              className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              {t.activateDay} →
+            </button>
           </div>
         )}
 
@@ -372,7 +399,7 @@ export default function ShiftRow({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {isPrevAvailable && !isOff && (
+            {isPrevAvailable && (
               <button
                 onClick={() => onCopyFromPrevious(day.dateStr)}
                 className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-cyan-600 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700"
@@ -399,7 +426,7 @@ export default function ShiftRow({
                   ? 'bg-cyan-500/15 text-cyan-800 dark:text-cyan-300 border-cyan-500/30' 
                   : 'bg-slate-100 dark:bg-slate-950 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800'
             }`}>
-              {workedHours > 0 ? `${workedHours.toFixed(1)}h` : '0.0h'}
+              {workedHours > 0 && !isOff ? `${workedHours.toFixed(1)}h` : '0.0h'}
             </div>
           </div>
         </div>
@@ -441,6 +468,10 @@ export default function ShiftRow({
               ) : isPending && day.isStandardWorkday ? (
                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                   {t.pendingBadge}
+                </span>
+              ) : isOff ? (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                  {t.restBadge}
                 </span>
               ) : null}
 
@@ -563,7 +594,7 @@ export default function ShiftRow({
               <button
                 type="button"
                 onClick={handleApplySplitPreset}
-                className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/30 transition-colors"
+                className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/30 transition-colors shadow-sm"
                 title="11:00-17:00 & 18:30-23:00"
               >
                 10.5h
@@ -588,18 +619,35 @@ export default function ShiftRow({
 
           </div>
         ) : (
-          <div className="flex-1 flex items-center">
+          <div className="flex-1 flex items-center justify-between">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 text-xs font-semibold border border-slate-200 dark:border-slate-800/80 shadow-sm">
               <Moon className="w-3.5 h-3.5 text-slate-400" />
               {t.offDayLabel}
             </span>
+            <div className="flex items-center gap-1.5 text-[10px]">
+              <span className="text-slate-400">{t.presetsLabel}</span>
+              <button
+                type="button"
+                onClick={handleApplySplitPreset}
+                className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/30"
+              >
+                10.5h Split
+              </button>
+              <button
+                type="button"
+                onClick={handleApply8hStandard}
+                className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+              >
+                8h Norm
+              </button>
+            </div>
           </div>
         )}
 
         {/* Desktop Actions */}
         <div className="flex items-center gap-2 shrink-0">
           
-          {isPrevAvailable && !isOff && (
+          {isPrevAvailable && (
             <button
               onClick={() => onCopyFromPrevious(day.dateStr)}
               className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors shadow-sm"
@@ -621,13 +669,24 @@ export default function ShiftRow({
 
           <button
             onClick={handleToggleOff}
-            className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target ${
+            className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target flex items-center gap-1 ${
               isOff
-                ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30'
-                : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-800'
+                ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+                : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
             }`}
+            title={isOff ? 'Turn day ON / Enable' : 'Set as OFF day'}
           >
-            {isOff ? t.activateDay : t.setOff}
+            {isOff ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t.activateDay}</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-slate-500" />
+                <span>{t.setOff}</span>
+              </>
+            )}
           </button>
 
           <div className={`min-w-[72px] text-center px-2.5 py-1 rounded-xl font-mono font-bold text-xs border shadow-sm ${
@@ -637,7 +696,7 @@ export default function ShiftRow({
                 ? 'bg-cyan-500/15 text-cyan-800 dark:text-cyan-300 border-cyan-500/30' 
                 : 'bg-slate-100 dark:bg-slate-950 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800'
           }`}>
-            {workedHours > 0 ? `${workedHours.toFixed(1)}h` : '0.0h'}
+            {workedHours > 0 && !isOff ? `${workedHours.toFixed(1)}h` : '0.0h'}
           </div>
         </div>
 
