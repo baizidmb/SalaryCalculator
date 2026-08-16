@@ -1,11 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { 
   Calendar, 
-  Wand2, 
   Trash2, 
-  Sun, 
-  Clock, 
-  Split, 
   Filter,
   CheckCircle2,
   AlertCircle
@@ -18,9 +14,6 @@ export default function DutyGrid({
   days,
   shifts,
   onShiftChange,
-  onBulkFillWeekdaysStandard,
-  onBulkFillSplitTemplate,
-  onSetWeekendsOff,
   onClearMonth,
   onDuplicateRow,
   onCopyFromPrevious,
@@ -55,21 +48,16 @@ export default function DutyGrid({
     }
   };
 
-  // Calculate day counts
+  // Calculate day counts for filter badges
   let filledCount = 0;
   let pendingCount = 0;
-  let restCount = 0;
-  let totalLoggedHours = 0;
 
   days.forEach(d => {
     const shift = shifts[d.dateStr] || { isOff: d.isWeekend };
     const { workedHours } = calculateShiftDayHours(shift);
-    if (shift.isOff) {
-      restCount++;
-    } else if (workedHours > 0) {
+    if (!shift.isOff && workedHours > 0) {
       filledCount++;
-      totalLoggedHours += workedHours;
-    } else {
+    } else if (!shift.isOff && workedHours === 0) {
       pendingCount++;
     }
   });
@@ -94,8 +82,8 @@ export default function DutyGrid({
   return (
     <div className="w-full liquid-glass rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-4">
       
-      {/* Top Toolbar: Title & Filter Tabs */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
+      {/* Top Toolbar: Title + Filter Tabs + Reset Month Button */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
         
         {/* Title */}
         <div className="flex items-center gap-2.5">
@@ -112,117 +100,68 @@ export default function DutyGrid({
           </div>
         </div>
 
-        {/* Filter Tabs (Horizontal scroll on mobile) */}
-        <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-950/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shrink-0 self-start xl:self-auto overflow-x-auto max-w-full shadow-sm scrollbar-none">
+        {/* Filter Tabs & Reset Action */}
+        <div className="flex flex-wrap items-center gap-2">
           
-          <button
-            onClick={() => setFilterMode('all')}
-            className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
-              filterMode === 'all'
-                ? 'bg-cyan-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            {t.allDays} ({days.length})
-          </button>
-
-          <button
-            onClick={() => setFilterMode('filled')}
-            className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
-              filterMode === 'filled'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{t.filledDaysFilter} ({filledCount})</span>
-          </button>
-
-          <button
-            onClick={() => setFilterMode('pending')}
-            className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
-              filterMode === 'pending'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            <AlertCircle className="w-3.5 h-3.5" />
-            <span>{t.pendingDaysFilter} ({pendingCount})</span>
-          </button>
-
-          <button
-            onClick={() => setFilterMode('holidays_weekends')}
-            className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
-              filterMode === 'holidays_weekends'
-                ? 'bg-slate-700 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            {t.weekendHolidays}
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* Progress & Quick Actions Bar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 text-xs">
-        
-        {/* Visual Logging Progress Banner */}
-        <div className="lg:col-span-1 flex items-center justify-between bg-slate-100/90 dark:bg-slate-950/60 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700 dark:text-slate-300">{t.statusSummaryTitle}:</span>
-          </div>
-          <div className="flex items-center gap-2 font-mono font-bold">
-            <span className="text-emerald-700 dark:text-emerald-400">✓ {filledCount} {t.daysLoggedOfTotal}</span>
-            <span className="text-slate-400">|</span>
-            <span className="text-amber-700 dark:text-amber-400">⏳ {pendingCount} {t.daysPending}</span>
-          </div>
-        </div>
-
-        {/* Bulk Action Toolbar */}
-        <div className="lg:col-span-2 flex flex-wrap items-center gap-1.5 bg-white/70 dark:bg-slate-950/40 p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-slate-800/50 shadow-sm">
-          <span className="text-slate-500 font-semibold flex items-center gap-1 pl-1 pr-1 text-[11px]">
-            <Wand2 className="w-3 h-3 text-cyan-600" /> {t.quickActions}
-          </span>
-
-          <button
-            onClick={onBulkFillSplitTemplate}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-semibold border border-emerald-500/30 transition-colors"
-            title="Auto-fill 10.5h split shift on standard workdays"
-          >
-            <Split className="w-3 h-3 text-emerald-600" />
-            <span>{t.fillSplitTemplate}</span>
-          </button>
-
-          <button
-            onClick={onBulkFillWeekdaysStandard}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors"
-            title="Auto-fill 8h standard weekdays"
-          >
-            <Clock className="w-3 h-3 text-cyan-600" />
-            <span>{t.fillStandardWeekdays}</span>
-          </button>
-
-          <button
-            onClick={onSetWeekendsOff}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors"
-            title="Mark all weekends as OFF"
-          >
-            <Sun className="w-3.5 h-3.5 text-amber-500" />
-            <span>{t.setWeekendsOff}</span>
-          </button>
-
-          <div className="ml-auto">
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-950/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto max-w-full shadow-sm scrollbar-none">
             <button
-              onClick={onClearMonth}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs transition-colors"
-              title="Reset month logs"
+              onClick={() => setFilterMode('all')}
+              className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+                filterMode === 'all'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
             >
-              <Trash2 className="w-3 h-3" />
-              <span className="hidden sm:inline">{t.resetMonth}</span>
+              {t.allDays} ({days.length})
+            </button>
+
+            <button
+              onClick={() => setFilterMode('filled')}
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+                filterMode === 'filled'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{t.filledDaysFilter} ({filledCount})</span>
+            </button>
+
+            <button
+              onClick={() => setFilterMode('pending')}
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+                filterMode === 'pending'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>{t.pendingDaysFilter} ({pendingCount})</span>
+            </button>
+
+            <button
+              onClick={() => setFilterMode('holidays_weekends')}
+              className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+                filterMode === 'holidays_weekends'
+                  ? 'bg-slate-700 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              {t.weekendHolidays}
             </button>
           </div>
+
+          {/* Reset Month Button */}
+          <button
+            onClick={onClearMonth}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-semibold transition-colors shadow-sm touch-target ml-auto sm:ml-0"
+            title="Reset all days in current month"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{t.resetMonth}</span>
+          </button>
+
         </div>
 
       </div>
