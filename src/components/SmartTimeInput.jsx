@@ -3,10 +3,9 @@ import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } f
 /**
  * Ultra-Modern Smart Time Input Component
  * - 4-digit auto-formatting (e.g. "1100" -> "11:00")
- * - Auto-advances focus to next time field immediately upon completion
- * - Enter key moves to next field or next day
- * - Quick touch suggestion popover on mobile/PC
- * - Up/Down arrow keys for rapid 1-hour adjustments
+ * - Reliable mobile and PC auto-advance across fields
+ * - Transparent Super Glossy Liquid Glass suggestion popover
+ * - Touch-friendly and viewport-clamped
  */
 const SmartTimeInput = forwardRef(function SmartTimeInput({
   value = '',
@@ -38,18 +37,29 @@ const SmartTimeInput = forwardRef(function SmartTimeInput({
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
+
+  const triggerAutoAdvance = () => {
+    if (onComplete) {
+      // Use double requestAnimationFrame + small timeout to ensure mobile virtual keyboards shift seamlessly
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          onComplete();
+        }, 30);
+      });
+    }
+  };
 
   const handleSelectSuggestion = (timeStr) => {
     setRawText(timeStr);
     onChange(timeStr);
     setShowSuggestions(false);
-    if (onComplete) {
-      setTimeout(() => {
-        onComplete();
-      }, 40);
-    }
+    triggerAutoAdvance();
   };
 
   const handleChange = (e) => {
@@ -69,12 +79,7 @@ const SmartTimeInput = forwardRef(function SmartTimeInput({
       setRawText(formatted);
       onChange(formatted);
       setShowSuggestions(false);
-
-      if (onComplete) {
-        setTimeout(() => {
-          onComplete();
-        }, 40);
-      }
+      triggerAutoAdvance();
       return;
     }
 
@@ -90,11 +95,7 @@ const SmartTimeInput = forwardRef(function SmartTimeInput({
         setRawText(formatted);
         onChange(formatted);
         setShowSuggestions(false);
-        if (onComplete) {
-          setTimeout(() => {
-            onComplete();
-          }, 40);
-        }
+        triggerAutoAdvance();
         return;
       }
     }
@@ -168,25 +169,41 @@ const SmartTimeInput = forwardRef(function SmartTimeInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         maxLength={5}
-        className={`liquid-input text-xs font-mono font-bold px-2 py-1 text-center rounded-lg outline-none tracking-widest ${className}`}
+        className={`liquid-input text-xs font-mono font-bold px-2 py-1 text-center rounded-xl outline-none tracking-widest transition-all duration-200 ${className}`}
       />
 
-      {/* Modern Touch Suggestion Popover */}
-      {showSuggestions && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl p-1 shadow-xl border border-slate-200 dark:border-slate-700 flex items-center gap-1 animate-fade-in">
-          {suggestions.map((time) => (
-            <button
-              key={time}
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleSelectSuggestion(time);
-              }}
-              className="px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 hover:bg-cyan-500 hover:text-white rounded-md transition-colors"
-            >
-              {time}
-            </button>
-          ))}
+      {/* 🌟 Super Glossy Transparent Liquid Glass Floating Suggestion Dock */}
+      {showSuggestions && suggestions && suggestions.length > 0 && (
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 animate-in fade-in zoom-in-95 duration-200 ease-out pointer-events-auto">
+          
+          {/* Glass Card Container */}
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl backdrop-blur-2xl bg-white/80 dark:bg-slate-900/85 border border-white/80 dark:border-white/15 shadow-[0_12px_36px_rgba(6,182,212,0.22)] shadow-cyan-500/10 max-w-[calc(100vw-36px)] overflow-x-auto whitespace-nowrap scrollbar-none">
+            
+            {suggestions.map((time) => (
+              <button
+                key={time}
+                type="button"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelectSuggestion(time);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelectSuggestion(time);
+                }}
+                className="px-2.5 py-1 text-[11px] font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/70 dark:bg-slate-800/80 hover:bg-gradient-to-r hover:from-cyan-500 hover:to-emerald-500 hover:text-white dark:hover:text-white rounded-xl border border-white/60 dark:border-slate-700/60 shadow-sm active:scale-95 transition-all duration-150 shrink-0 touch-manipulation"
+              >
+                {time}
+              </button>
+            ))}
+
+          </div>
+
+          {/* Micro arrow indicator pointing down to the input */}
+          <div className="w-2.5 h-2.5 rotate-45 mx-auto -mt-1.5 bg-white/80 dark:bg-slate-900/85 border-r border-b border-white/80 dark:border-white/15 shadow-sm" />
+
         </div>
       )}
     </div>
