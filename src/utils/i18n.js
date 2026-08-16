@@ -6,7 +6,7 @@
 export const TRANSLATIONS = {
   en: {
     // Header & Meta
-    appTitle: 'ZidBhai ShiftPay',
+    appTitle: 'Salary Calculator',
     appSubtitle: 'Romanian Duty Sheet & Smart Salary Calculator',
     roFiscalBadge: 'RO Labor Code',
     bucharestTime: 'Bucharest Time',
@@ -143,7 +143,7 @@ export const TRANSLATIONS = {
   
   ro: {
     // Header & Meta
-    appTitle: 'ZidBhai ShiftPay',
+    appTitle: 'Calculator Salarii',
     appSubtitle: 'Pontaj Românesc & Calculator Inteligent Salarii',
     roFiscalBadge: 'Codul Muncii RO',
     bucharestTime: 'Ora României',
