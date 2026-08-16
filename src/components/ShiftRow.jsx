@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { 
   Sparkles, 
   Moon, 
@@ -8,7 +8,8 @@ import {
   AlignJustify,
   CheckCircle2,
   RotateCcw,
-  Sun
+  Sun,
+  Plus
 } from 'lucide-react';
 import SmartTimeInput from './SmartTimeInput';
 import { calculateShiftDayHours, decimalToTimeString } from '../utils/salaryEngine';
@@ -20,6 +21,8 @@ export default function ShiftRow({
   onChange,
   onDuplicateToNext,
   onCopyFromPrevious,
+  onFocusNextDay,
+  registerInputRef,
   isNextAvailable,
   isPrevAvailable,
   lang = 'en'
@@ -28,7 +31,7 @@ export default function ShiftRow({
   const isOff = !!shiftData?.isOff;
   const mode = shiftData?.mode || 'split';
 
-  // Input refs for automatic focus advancing
+  // Input refs for automatic focus advancing within the row
   const start1Ref = useRef(null);
   const end1Ref = useRef(null);
   const start2Ref = useRef(null);
@@ -37,6 +40,21 @@ export default function ShiftRow({
   const continuousStartRef = useRef(null);
   const continuousEndRef = useRef(null);
 
+  // Register primary input ref so other days can jump to this day on Enter
+  useEffect(() => {
+    if (registerInputRef) {
+      registerInputRef(day.dateStr, {
+        focus: () => {
+          if (mode === 'continuous') {
+            continuousStartRef.current?.focus();
+          } else {
+            start1Ref.current?.focus();
+          }
+        }
+      });
+    }
+  }, [day.dateStr, mode, registerInputRef]);
+
   const { workedHours, breakHours } = calculateShiftDayHours(shiftData);
   const isFilled = !isOff && workedHours > 0;
   const isPending = !isOff && workedHours === 0;
@@ -44,7 +62,7 @@ export default function ShiftRow({
   const handleFieldChange = (field, value) => {
     onChange(day.dateStr, {
       ...shiftData,
-      isOff: false, // Automatically active whenever a user types
+      isOff: false,
       [field]: value
     });
   };
@@ -57,12 +75,33 @@ export default function ShiftRow({
     });
   };
 
+  const handleActivateDay = () => {
+    onChange(day.dateStr, {
+      ...shiftData,
+      isOff: false
+    });
+    // Auto-focus first input when activated
+    setTimeout(() => {
+      if (mode === 'continuous') {
+        continuousStartRef.current?.focus();
+      } else {
+        start1Ref.current?.focus();
+      }
+    }, 50);
+  };
+
   const handleModeChange = (newMode) => {
     onChange(day.dateStr, {
       ...shiftData,
       mode: newMode,
       isOff: false
     });
+  };
+
+  const handleNextDayJump = () => {
+    if (onFocusNextDay) {
+      onFocusNextDay(day.dateStr);
+    }
   };
 
   // Visual state styling
@@ -75,8 +114,8 @@ export default function ShiftRow({
     // ⚪ PENDING / UNFILLED STATE: Subtle amber dashed border
     cardBorderAndBg = 'border-dashed border-amber-300 dark:border-amber-600/60 bg-amber-50/25 dark:bg-amber-950/10';
   } else if (isOff) {
-    // 🌙 REST / OFF STATE: Muted soft slate
-    cardBorderAndBg = 'border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/50 opacity-75';
+    // 🌙 REST / OFF STATE: Clean muted slate
+    cardBorderAndBg = 'border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/40 opacity-75';
   }
 
   if (day.isHoliday && isFilled) {
@@ -86,7 +125,7 @@ export default function ShiftRow({
   return (
     <div className={`rounded-2xl border transition-all duration-200 ${cardBorderAndBg}`}>
       
-      {/* 📱 MOBILE VIEW (< md) - CLEAN TOUCH CARD WITH ALWAYS-ACTIVE DIRECT INPUTS */}
+      {/* 📱 MOBILE VIEW (< md) */}
       <div className="md:hidden p-3.5 space-y-3">
         
         {/* Header: Day number + Day Name + Status Pill + OFF Toggle */}
@@ -157,7 +196,7 @@ export default function ShiftRow({
                 ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
                 : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
             }`}
-            title={isOff ? 'Activate day' : 'Set as OFF day'}
+            title={isOff ? 'Turn day ON' : 'Set as OFF day'}
           >
             {isOff ? (
               <>
@@ -174,110 +213,138 @@ export default function ShiftRow({
 
         </div>
 
-        {/* Mode Switcher */}
-        <div className="grid grid-cols-2 bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shadow-sm text-xs">
-          <button
-            onClick={() => handleModeChange('split')}
-            className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
-              mode === 'split' 
-                ? 'bg-cyan-600 text-white shadow-sm' 
-                : 'text-slate-600 dark:text-slate-400'
-            }`}
-          >
-            <Split className="w-3.5 h-3.5" />
-            <span>{t.splitMode}</span>
-          </button>
+        {/* TIME INPUTS: HIDE COMPLETELY WHEN IS OFF */}
+        {!isOff ? (
+          <div className="space-y-2.5 pt-1">
+            
+            {/* Mode Switcher */}
+            <div className="grid grid-cols-2 bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shadow-sm text-xs">
+              <button
+                onClick={() => handleModeChange('split')}
+                className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
+                  mode === 'split' 
+                    ? 'bg-cyan-600 text-white shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Split className="w-3.5 h-3.5" />
+                <span>{t.splitMode}</span>
+              </button>
 
-          <button
-            onClick={() => handleModeChange('continuous')}
-            className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
-              mode === 'continuous' 
-                ? 'bg-emerald-600 text-white shadow-sm' 
-                : 'text-slate-600 dark:text-slate-400'
-            }`}
-          >
-            <AlignJustify className="w-3.5 h-3.5" />
-            <span>{t.continuousMode}</span>
-          </button>
-        </div>
+              <button
+                onClick={() => handleModeChange('continuous')}
+                className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
+                  mode === 'continuous' 
+                    ? 'bg-emerald-600 text-white shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <AlignJustify className="w-3.5 h-3.5" />
+                <span>{t.continuousMode}</span>
+              </button>
+            </div>
 
-        {/* ALWAYS-ACTIVE DIRECT TIME INPUTS WITH AUTO-ADVANCE */}
-        <div className="space-y-2 pt-0.5">
-          {mode === 'split' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              
-              {/* Slot 1 */}
-              <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">{t.slot1}</span>
-                <div className="flex items-center gap-1">
+            {/* Smart Inputs */}
+            {mode === 'split' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                
+                {/* Slot 1 */}
+                <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">{t.slot1}</span>
+                  <div className="flex items-center gap-1">
+                    <SmartTimeInput
+                      ref={start1Ref}
+                      value={shiftData?.start1 || ''}
+                      onChange={(val) => handleFieldChange('start1', val)}
+                      onComplete={() => end1Ref.current?.focus()}
+                      onEnterPress={() => end1Ref.current?.focus()}
+                      placeholder="00:00"
+                      className="w-16"
+                    />
+                    <span className="text-slate-400 text-xs font-bold">→</span>
+                    <SmartTimeInput
+                      ref={end1Ref}
+                      value={shiftData?.end1 || ''}
+                      onChange={(val) => handleFieldChange('end1', val)}
+                      onComplete={() => start2Ref.current?.focus()}
+                      onEnterPress={() => start2Ref.current?.focus()}
+                      placeholder="00:00"
+                      className="w-16"
+                    />
+                  </div>
+                </div>
+
+                {/* Slot 2 */}
+                <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">{t.slot2}</span>
+                  <div className="flex items-center gap-1">
+                    <SmartTimeInput
+                      ref={start2Ref}
+                      value={shiftData?.start2 || ''}
+                      onChange={(val) => handleFieldChange('start2', val)}
+                      onComplete={() => end2Ref.current?.focus()}
+                      onEnterPress={() => end2Ref.current?.focus()}
+                      placeholder="00:00"
+                      className="w-16"
+                    />
+                    <span className="text-slate-400 text-xs font-bold">→</span>
+                    <SmartTimeInput
+                      ref={end2Ref}
+                      value={shiftData?.end2 || ''}
+                      onChange={(val) => handleFieldChange('end2', val)}
+                      onComplete={handleNextDayJump}
+                      onEnterPress={handleNextDayJump}
+                      placeholder="00:00"
+                      className="w-16"
+                    />
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">{t.interval}</span>
+                <div className="flex items-center gap-2">
                   <SmartTimeInput
-                    ref={start1Ref}
-                    value={shiftData?.start1 || ''}
-                    onChange={(val) => handleFieldChange('start1', val)}
-                    onComplete={() => end1Ref.current?.focus()}
+                    ref={continuousStartRef}
+                    value={shiftData?.continuousStart || ''}
+                    onChange={(val) => handleFieldChange('continuousStart', val)}
+                    onComplete={() => continuousEndRef.current?.focus()}
+                    onEnterPress={() => continuousEndRef.current?.focus()}
                     placeholder="00:00"
-                    className="w-16"
+                    className="w-20"
                   />
                   <span className="text-slate-400 text-xs font-bold">→</span>
                   <SmartTimeInput
-                    ref={end1Ref}
-                    value={shiftData?.end1 || ''}
-                    onChange={(val) => handleFieldChange('end1', val)}
-                    onComplete={() => start2Ref.current?.focus()}
+                    ref={continuousEndRef}
+                    value={shiftData?.continuousEnd || ''}
+                    onChange={(val) => handleFieldChange('continuousEnd', val)}
+                    onComplete={handleNextDayJump}
+                    onEnterPress={handleNextDayJump}
                     placeholder="00:00"
-                    className="w-16"
+                    className="w-20"
                   />
                 </div>
               </div>
+            )}
 
-              {/* Slot 2 */}
-              <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">{t.slot2}</span>
-                <div className="flex items-center gap-1">
-                  <SmartTimeInput
-                    ref={start2Ref}
-                    value={shiftData?.start2 || ''}
-                    onChange={(val) => handleFieldChange('start2', val)}
-                    onComplete={() => end2Ref.current?.focus()}
-                    placeholder="00:00"
-                    className="w-16"
-                  />
-                  <span className="text-slate-400 text-xs font-bold">→</span>
-                  <SmartTimeInput
-                    ref={end2Ref}
-                    value={shiftData?.end2 || ''}
-                    onChange={(val) => handleFieldChange('end2', val)}
-                    placeholder="00:00"
-                    className="w-16"
-                  />
-                </div>
-              </div>
-
+          </div>
+        ) : (
+          // DISABLED REST DAY BANNER (NO TIME INPUTS SHOWN)
+          <div className="py-3 px-4 rounded-xl bg-slate-100/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+              <Moon className="w-4 h-4 text-slate-400" />
+              <span>{t.offDayLabel}</span>
             </div>
-          ) : (
-            <div className="flex items-center justify-between bg-white dark:bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">{t.interval}</span>
-              <div className="flex items-center gap-2">
-                <SmartTimeInput
-                  ref={continuousStartRef}
-                  value={shiftData?.continuousStart || ''}
-                  onChange={(val) => handleFieldChange('continuousStart', val)}
-                  onComplete={() => continuousEndRef.current?.focus()}
-                  placeholder="00:00"
-                  className="w-20"
-                />
-                <span className="text-slate-400 text-xs font-bold">→</span>
-                <SmartTimeInput
-                  ref={continuousEndRef}
-                  value={shiftData?.continuousEnd || ''}
-                  onChange={(val) => handleFieldChange('continuousEnd', val)}
-                  placeholder="00:00"
-                  className="w-20"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+            <button
+              onClick={handleActivateDay}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t.activateDay}</span>
+            </button>
+          </div>
+        )}
 
         {/* Mobile Footer: Break + Actions + Hours Tag */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/60 text-xs">
@@ -326,7 +393,7 @@ export default function ShiftRow({
       </div>
 
 
-      {/* 🖥️ DESKTOP VIEW (md+) - STREAMLINED INLINE ROW WITH DIRECT INPUTS & AUTO-FOCUS */}
+      {/* 🖥️ DESKTOP VIEW (md+) */}
       <div className="hidden md:flex p-3.5 items-center justify-between gap-3">
         
         {/* Day & Date Column */}
@@ -387,114 +454,139 @@ export default function ShiftRow({
           </div>
         </div>
 
-        {/* Inputs & Mode Switcher */}
-        <div className="flex-1 flex flex-wrap items-center gap-2.5">
-          
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shrink-0 shadow-sm">
-            <button
-              onClick={() => handleModeChange('split')}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
-                mode === 'split' 
-                  ? 'bg-cyan-600 text-white shadow-sm' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-            >
-              <Split className="w-3.5 h-3.5" />
-              <span>{t.splitMode}</span>
-            </button>
+        {/* INPUTS / DISABLED VIEW */}
+        {!isOff ? (
+          <div className="flex-1 flex flex-wrap items-center gap-2.5">
+            
+            {/* Mode Switcher */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shrink-0 shadow-sm">
+              <button
+                onClick={() => handleModeChange('split')}
+                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                  mode === 'split' 
+                    ? 'bg-cyan-600 text-white shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                <Split className="w-3.5 h-3.5" />
+                <span>{t.splitMode}</span>
+              </button>
 
+              <button
+                onClick={() => handleModeChange('continuous')}
+                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                  mode === 'continuous' 
+                    ? 'bg-emerald-600 text-white shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                <AlignJustify className="w-3.5 h-3.5" />
+                <span>{t.continuousMode}</span>
+              </button>
+            </div>
+
+            {/* Time inputs with auto-advance */}
+            {mode === 'split' ? (
+              <div className="flex flex-wrap items-center gap-2">
+                
+                {/* Slot 1 */}
+                <div className="flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">{t.slot1}</span>
+                  <SmartTimeInput
+                    ref={start1Ref}
+                    value={shiftData?.start1 || ''}
+                    onChange={(val) => handleFieldChange('start1', val)}
+                    onComplete={() => end1Ref.current?.focus()}
+                    onEnterPress={() => end1Ref.current?.focus()}
+                    placeholder="00:00"
+                    className="w-16"
+                  />
+                  <span className="text-slate-400 text-xs font-bold">→</span>
+                  <SmartTimeInput
+                    ref={end1Ref}
+                    value={shiftData?.end1 || ''}
+                    onChange={(val) => handleFieldChange('end1', val)}
+                    onComplete={() => start2Ref.current?.focus()}
+                    onEnterPress={() => start2Ref.current?.focus()}
+                    placeholder="00:00"
+                    className="w-16"
+                  />
+                </div>
+
+                {breakHours > 0 && !isOff && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] border border-slate-200 dark:border-slate-700 font-mono shadow-sm">
+                    <Coffee className="w-3 h-3 text-amber-500" />
+                    <span>{t.breakPill} {decimalToTimeString(breakHours, true)}</span>
+                  </div>
+                )}
+
+                {/* Slot 2 */}
+                <div className="flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">{t.slot2}</span>
+                  <SmartTimeInput
+                    ref={start2Ref}
+                    value={shiftData?.start2 || ''}
+                    onChange={(val) => handleFieldChange('start2', val)}
+                    onComplete={() => end2Ref.current?.focus()}
+                    onEnterPress={() => end2Ref.current?.focus()}
+                    placeholder="00:00"
+                    className="w-16"
+                  />
+                  <span className="text-slate-400 text-xs font-bold">→</span>
+                  <SmartTimeInput
+                    ref={end2Ref}
+                    value={shiftData?.end2 || ''}
+                    onChange={(val) => handleFieldChange('end2', val)}
+                    onComplete={handleNextDayJump}
+                    onEnterPress={handleNextDayJump}
+                    placeholder="00:00"
+                    className="w-16"
+                  />
+                </div>
+
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">{t.interval}</span>
+                <SmartTimeInput
+                  ref={continuousStartRef}
+                  value={shiftData?.continuousStart || ''}
+                  onChange={(val) => handleFieldChange('continuousStart', val)}
+                  onComplete={() => continuousEndRef.current?.focus()}
+                  onEnterPress={() => continuousEndRef.current?.focus()}
+                  placeholder="00:00"
+                  className="w-20"
+                />
+                <span className="text-slate-400 text-xs font-bold">→</span>
+                <SmartTimeInput
+                  ref={continuousEndRef}
+                  value={shiftData?.continuousEnd || ''}
+                  onChange={(val) => handleFieldChange('continuousEnd', val)}
+                  onComplete={handleNextDayJump}
+                  onEnterPress={handleNextDayJump}
+                  placeholder="00:00"
+                  className="w-20"
+                />
+              </div>
+            )}
+
+          </div>
+        ) : (
+          // DISABLED REST DAY BANNER
+          <div className="flex-1 flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 text-xs font-semibold border border-slate-200 dark:border-slate-800/80 shadow-sm">
+              <Moon className="w-3.5 h-3.5 text-slate-400" />
+              {t.offDayLabel}
+            </span>
             <button
-              onClick={() => handleModeChange('continuous')}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
-                mode === 'continuous' 
-                  ? 'bg-emerald-600 text-white shadow-sm' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
+              onClick={handleActivateDay}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 transition-colors"
             >
-              <AlignJustify className="w-3.5 h-3.5" />
-              <span>{t.continuousMode}</span>
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t.activateDay}</span>
             </button>
           </div>
-
-          {/* Time inputs with auto-advance */}
-          {mode === 'split' ? (
-            <div className="flex flex-wrap items-center gap-2">
-              
-              {/* Slot 1 */}
-              <div className="flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">{t.slot1}</span>
-                <SmartTimeInput
-                  ref={start1Ref}
-                  value={shiftData?.start1 || ''}
-                  onChange={(val) => handleFieldChange('start1', val)}
-                  onComplete={() => end1Ref.current?.focus()}
-                  placeholder="00:00"
-                  className="w-16"
-                />
-                <span className="text-slate-400 text-xs font-bold">→</span>
-                <SmartTimeInput
-                  ref={end1Ref}
-                  value={shiftData?.end1 || ''}
-                  onChange={(val) => handleFieldChange('end1', val)}
-                  onComplete={() => start2Ref.current?.focus()}
-                  placeholder="00:00"
-                  className="w-16"
-                />
-              </div>
-
-              {breakHours > 0 && !isOff && (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] border border-slate-200 dark:border-slate-700 font-mono shadow-sm">
-                  <Coffee className="w-3 h-3 text-amber-500" />
-                  <span>{t.breakPill} {decimalToTimeString(breakHours, true)}</span>
-                </div>
-              )}
-
-              {/* Slot 2 */}
-              <div className="flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">{t.slot2}</span>
-                <SmartTimeInput
-                  ref={start2Ref}
-                  value={shiftData?.start2 || ''}
-                  onChange={(val) => handleFieldChange('start2', val)}
-                  onComplete={() => end2Ref.current?.focus()}
-                  placeholder="00:00"
-                  className="w-16"
-                />
-                <span className="text-slate-400 text-xs font-bold">→</span>
-                <SmartTimeInput
-                  ref={end2Ref}
-                  value={shiftData?.end2 || ''}
-                  onChange={(val) => handleFieldChange('end2', val)}
-                  placeholder="00:00"
-                  className="w-16"
-                />
-              </div>
-
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{t.interval}</span>
-              <SmartTimeInput
-                ref={continuousStartRef}
-                value={shiftData?.continuousStart || ''}
-                onChange={(val) => handleFieldChange('continuousStart', val)}
-                onComplete={() => continuousEndRef.current?.focus()}
-                placeholder="00:00"
-                className="w-20"
-              />
-              <span className="text-slate-400 text-xs font-bold">→</span>
-              <SmartTimeInput
-                ref={continuousEndRef}
-                value={shiftData?.continuousEnd || ''}
-                onChange={(val) => handleFieldChange('continuousEnd', val)}
-                placeholder="00:00"
-                className="w-20"
-              />
-            </div>
-          )}
-
-        </div>
+        )}
 
         {/* Desktop Actions */}
         <div className="flex items-center gap-2 shrink-0">
@@ -526,7 +618,7 @@ export default function ShiftRow({
                 ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
                 : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
             }`}
-            title={isOff ? 'Activate day' : 'Set as OFF day'}
+            title={isOff ? 'Turn day ON' : 'Set as OFF day'}
           >
             {isOff ? (
               <>

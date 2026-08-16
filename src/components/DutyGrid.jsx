@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Calendar, 
   Wand2, 
@@ -8,8 +8,7 @@ import {
   Split, 
   Filter,
   CheckCircle2,
-  AlertCircle,
-  Moon
+  AlertCircle
 } from 'lucide-react';
 import ShiftRow from './ShiftRow';
 import { calculateShiftDayHours } from '../utils/salaryEngine';
@@ -29,6 +28,32 @@ export default function DutyGrid({
 }) {
   const [filterMode, setFilterMode] = useState('all'); // 'all' | 'filled' | 'pending' | 'holidays_weekends'
   const t = TRANSLATIONS[lang];
+
+  // Global registry for cross-day Enter key auto-focus
+  const inputsRegistry = useRef({});
+
+  const handleRegisterInputRef = (dateStr, refObj) => {
+    inputsRegistry.current[dateStr] = refObj;
+  };
+
+  const handleFocusNextDay = (currentDateStr) => {
+    const currentIdx = days.findIndex(d => d.dateStr === currentDateStr);
+    if (currentIdx >= 0 && currentIdx < days.length - 1) {
+      const nextDay = days[currentIdx + 1];
+      const nextShift = shifts[nextDay.dateStr];
+      
+      // If next day is OFF, activate it so user can type seamlessly
+      if (nextShift?.isOff) {
+        onShiftChange(nextDay.dateStr, { ...nextShift, isOff: false });
+      }
+
+      setTimeout(() => {
+        if (inputsRegistry.current[nextDay.dateStr]) {
+          inputsRegistry.current[nextDay.dateStr].focus();
+        }
+      }, 70);
+    }
+  };
 
   // Calculate day counts
   let filledCount = 0;
@@ -184,7 +209,7 @@ export default function DutyGrid({
             className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors"
             title="Mark all weekends as OFF"
           >
-            <Sun className="w-3 h-3 text-amber-500" />
+            <Sun className="w-3.5 h-3.5 text-amber-500" />
             <span>{t.setWeekendsOff}</span>
           </button>
 
@@ -228,6 +253,8 @@ export default function DutyGrid({
                 onChange={onShiftChange}
                 onDuplicateToNext={onDuplicateRow}
                 onCopyFromPrevious={onCopyFromPrevious}
+                onFocusNextDay={handleFocusNextDay}
+                registerInputRef={handleRegisterInputRef}
                 isNextAvailable={isNextAvailable}
                 isPrevAvailable={isPrevAvailable}
                 lang={lang}
