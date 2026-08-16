@@ -154,16 +154,16 @@ export default function App() {
           if (loaded[d.dateStr]) {
             merged[d.dateStr] = loaded[d.dateStr];
           } else {
-            // Default: Weekdays are ON (isOff: false), Weekends are OFF (isOff: true)
+            // Default: Active by default (isOff: false for weekdays), zero times
             merged[d.dateStr] = {
               mode: 'split',
               isOff: d.isWeekend,
-              start1: '11:00',
-              end1: '17:00',
-              start2: '18:30',
-              end2: '23:00',
-              continuousStart: '09:00',
-              continuousEnd: '17:00'
+              start1: '',
+              end1: '',
+              start2: '',
+              end2: '',
+              continuousStart: '',
+              continuousEnd: ''
             };
           }
         });
@@ -173,13 +173,13 @@ export default function App() {
         days.forEach(d => {
           initialShifts[d.dateStr] = {
             mode: 'split',
-            isOff: d.isWeekend, // Weekdays are ON (isOff: false), Weekends are OFF
-            start1: '11:00',
-            end1: '17:00',
-            start2: '18:30',
-            end2: '23:00',
-            continuousStart: '09:00',
-            continuousEnd: '17:00'
+            isOff: d.isWeekend,
+            start1: '',
+            end1: '',
+            start2: '',
+            end2: '',
+            continuousStart: '',
+            continuousEnd: ''
           };
         });
         setShifts(initialShifts);
