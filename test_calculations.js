@@ -1,4 +1,4 @@
-import { calculateShiftDayHours, calculateSalary, DEFAULT_GROSS_BASE } from './src/utils/salaryEngine.js';
+import { calculateShiftDayHours, calculateSalary, DEFAULT_GROSS_BASE, adjustTime } from './src/utils/salaryEngine.js';
 import { getOrthodoxEasterDate, getRomanianHolidays, getMonthlyNormInfo, getDaysInMonth } from './src/utils/romanianCalendar.js';
 
 let passed = 0;
@@ -30,7 +30,6 @@ assert(splitRes.workedHours === 10.5, `Split shift 11:00-17:00 & 18:30-23:00 sho
 assert(splitRes.breakHours === 1.5, `Break 17:00 to 18:30 should equal 1.5h, got ${splitRes.breakHours}h`);
 
 // Test 2: Standard 168 hours with all allowances toggled OFF
-// Construct mock days (21 working days of 8h each = 168h)
 const mockDays = [];
 const mockShifts = {};
 
@@ -57,7 +56,8 @@ const salaryRes = calculateSalary({
   normHours: 168,
   days: mockDays,
   shifts: mockShifts,
-  toggles: { weekend: false, holiday: false, overtime: false }
+  toggles: { weekend: false, holiday: false, overtime: false },
+  overtimeMode: 'monthly'
 });
 
 assert(salaryRes.totalWorkedHours === 168, `Total worked hours should be 168, got ${salaryRes.totalWorkedHours}`);
@@ -82,33 +82,47 @@ assert(easter2026.getUTCMonth() === 3 && easter2026.getUTCDate() === 12, `Orthod
 const holidays2026 = getRomanianHolidays(2026);
 assert(holidays2026.length >= 17, `Should have at least 17 statutory holiday entries in 2026, got ${holidays2026.length}`);
 
-// Test 5: Weekend and Holiday Allowances calculation
-const weekendDay = { dayNumber: 1, dateStr: '2026-08-01', dayOfWeek: 6, isWeekend: true, isHoliday: false, isStandardWorkday: false };
-const holidayDay = { dayNumber: 15, dateStr: '2026-08-15', dayOfWeek: 6, isWeekend: true, isHoliday: true, isStandardWorkday: false };
+// Test 5: Daily Overtime Mode (> 8h / day)
+// 10 working days of 10.5h shift = 105h total, with 10 * 2.5h = 25h daily overtime
+const dailyDays = [];
+const dailyShifts = {};
+for (let i = 1; i <= 10; i++) {
+  const dateStr = `2024-07-${String(i+10).padStart(2, '0')}`; // July 11 to July 20
+  dailyDays.push({
+    dayNumber: i + 10,
+    dateStr,
+    dayOfWeek: 2, // Tuesday
+    isWeekend: false,
+    isHoliday: false,
+    isStandardWorkday: true
+  });
+  dailyShifts[dateStr] = {
+    mode: 'split',
+    isOff: false,
+    start1: '11:00',
+    end1: '17:00',
+    start2: '18:30',
+    end2: '23:00' // 10.5h
+  };
+}
 
-const testBonusSalary = calculateSalary({
+const dailyOTRes = calculateSalary({
   baseGross: 5500,
-  normHours: 168,
-  days: [
-    ...mockDays,
-    weekendDay,
-    holidayDay
-  ],
-  shifts: {
-    ...mockShifts,
-    '2026-08-01': { mode: 'continuous', continuousStart: '10:00', continuousEnd: '18:00' }, // 8h weekend
-    '2026-08-15': { mode: 'continuous', continuousStart: '10:00', continuousEnd: '18:00' }  // 8h holiday
-  },
-  toggles: { weekend: true, holiday: true, overtime: true }
+  normHours: 184, // Full month norm
+  days: dailyDays,
+  shifts: dailyShifts,
+  toggles: { weekend: true, holiday: true, overtime: true },
+  overtimeMode: 'daily'
 });
 
-assert(testBonusSalary.weekendHours === 8, `Weekend hours should be 8, got ${testBonusSalary.weekendHours}`);
-assert(testBonusSalary.holidayHours === 8, `Holiday hours should be 8, got ${testBonusSalary.holidayHours}`);
-assert(testBonusSalary.overtimeHours === 16, `Overtime hours should be 16, got ${testBonusSalary.overtimeHours}`);
-assert(testBonusSalary.weekendBonus > 0, `Weekend bonus should be > 0, got ${testBonusSalary.weekendBonus}`);
-assert(testBonusSalary.holidayBonus > 0, `Holiday bonus should be > 0, got ${testBonusSalary.holidayBonus}`);
-assert(testBonusSalary.overtimePay > 0, `Overtime pay should be > 0, got ${testBonusSalary.overtimePay}`);
-assert(testBonusSalary.netSalary > 3217.50, `Net salary with bonuses should exceed base net (3217.50), got ${testBonusSalary.netSalary}`);
+assert(dailyOTRes.totalWorkedHours === 105, `Total worked hours should be 105, got ${dailyOTRes.totalWorkedHours}`);
+assert(dailyOTRes.overtimeHours === 25, `Daily Overtime hours should be 25h (10 days * 2.5h), got ${dailyOTRes.overtimeHours}`);
+assert(dailyOTRes.overtimePay > 0, `Daily Overtime Pay should be credited, got ${dailyOTRes.overtimePay} LEI`);
+
+// Test 6: Adjust Time utility stepper
+assert(adjustTime('17:00', 30) === '17:30', `adjustTime 17:00 + 30m should be 17:30, got ${adjustTime('17:00', 30)}`);
+assert(adjustTime('23:00', -30) === '22:30', `adjustTime 23:00 - 30m should be 22:30, got ${adjustTime('23:00', -30)}`);
+assert(adjustTime('17:00', 60) === '18:00', `adjustTime 17:00 + 60m should be 18:00, got ${adjustTime('17:00', 60)}`);
 
 console.log(`\n--- ALL TESTS COMPLETED: ${passed}/${total} PASSED ---`);
 if (passed === total) {

@@ -1,8 +1,9 @@
 /**
  * Romanian Salary & Tax Calculation Engine
- * Complies with Romanian Fiscal Code (Codul Fiscal - Legea 227/2015)
+ * Complies with Romanian Fiscal Code (Codul Fiscal - Legea 227/2015) & Labor Code (Legea 53/2003)
  * Standard Rates: CAS 25%, CASS 10%, Impozit pe Venit 10%
  * Allowance Rules: Weekend +30%, Legal Holiday +100%, Overtime +75%
+ * Supports: Daily Overtime (>8h/day), Weekly Overtime (>40h/week), Monthly Overtime, and Prorated Join Dates.
  */
 
 export const DEFAULT_GROSS_BASE = 5500; // Standard Romanian gross contract base in LEI
@@ -13,9 +14,9 @@ export const CAM_RATE = 0.0225;         // 2.25% Employer Work Insurance (CAM)
 export const RON_EUR_DEFAULT_RATE = 4.9765; // BNR Reference exchange rate
 
 export const BONUS_RATES = {
-  weekend: 0.30,   // +30% for hours worked on Saturday / Sunday
-  holiday: 1.00,   // +100% for hours worked on legal statutory holidays
-  overtime: 0.75,  // +75% bonus rate for overtime hours above norm
+  weekend: 0.30,   // +30% for hours worked on Saturday / Sunday (Art. 137)
+  holiday: 1.00,   // +100% for hours worked on legal statutory holidays (Art. 142)
+  overtime: 0.75,  // +75% bonus rate for overtime hours (Art. 120)
 };
 
 /**
@@ -50,6 +51,25 @@ export function decimalToTimeString(decimalHours, formattedText = false) {
 }
 
 /**
+ * Adds or subtracts deltaMinutes from a time string "HH:mm"
+ * @param {string} timeStr "17:00"
+ * @param {number} deltaMinutes e.g. +30, -30, +60
+ * @returns {string} "17:30"
+ */
+export function adjustTime(timeStr, deltaMinutes) {
+  if (!timeStr || typeof timeStr !== 'string') return '09:00';
+  const parts = timeStr.trim().split(':');
+  if (parts.length < 2) return timeStr;
+  let totalMin = (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0) + deltaMinutes;
+  
+  // Normalize within 0 - 1439 (24h)
+  totalMin = (totalMin % 1440 + 1440) % 1440;
+  const newH = Math.floor(totalMin / 60);
+  const newM = totalMin % 60;
+  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+}
+
+/**
  * Calculates duration in decimal hours between start and end time
  * Supports crossing midnight (e.g. 22:00 to 02:00 = 4.0h)
  * @param {string} start "HH:mm"
@@ -63,7 +83,7 @@ export function calculateIntervalDuration(start, end) {
   
   let duration = tEnd - tStart;
   if (duration < 0) {
-    // Crosses midnight (e.g. 22:00 to 02:00: 2 - 22 + 24 = 4)
+    // Crosses midnight
     duration += 24;
   }
   return Math.round(duration * 100) / 100;
@@ -112,8 +132,25 @@ export function calculateShiftDayHours(shiftLog) {
 }
 
 /**
+ * Returns ISO week number or week key for weekly grouping
+ * @param {Date} d 
+ * @returns {string} e.g. "2024-W28"
+ */
+function getWeekKey(d) {
+  const target = new Date(d.valueOf());
+  const dayNr = (d.getDay() + 6) % 7; // Monday = 0
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+  }
+  const weekNum = 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+  return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+/**
  * Main Romanian Salary Calculator Engine
- * Calculates itemized gross components, statutory deductions (CAS, CASS, Impozit), and final net pay.
  * 
  * @param {object} params
  * @param {number} params.baseGross Contract base gross salary in LEI (default 5,500)
@@ -121,6 +158,8 @@ export function calculateShiftDayHours(shiftLog) {
  * @param {Array<object>} params.days Calendar days metadata
  * @param {object} params.shifts Shift logs keyed by dateStr
  * @param {object} params.toggles Allowance toggles { weekend: boolean, holiday: boolean, overtime: boolean }
+ * @param {string} params.overtimeMode 'daily' | 'weekly' | 'monthly' (default 'daily' or 'monthly')
+ * @param {string} params.joinDate Optional join date string "YYYY-MM-DD"
  * @returns {object} Full financial calculation result
  */
 export function calculateSalary({
@@ -128,13 +167,30 @@ export function calculateSalary({
   normHours = 168,
   days = [],
   shifts = {},
-  toggles = { weekend: true, holiday: true, overtime: true }
+  toggles = { weekend: true, holiday: true, overtime: true },
+  overtimeMode = 'daily', // 'daily' (>8h/day) | 'weekly' (>40h/week) | 'monthly' (>norm)
+  joinDate = null
 }) {
   const safeBaseGross = Math.max(0, Number(baseGross) || 0);
-  const safeNormHours = Math.max(1, Number(normHours) || 168);
   
-  // Base hourly rate based on dynamic monthly norm (R = Gross / Norm)
-  const hourlyBaseRate = safeBaseGross / safeNormHours;
+  // Calculate effective norm (if join date is present in the current month, prorate)
+  let effectiveNormHours = Math.max(1, Number(normHours) || 168);
+  let proratedWorkingDays = 0;
+
+  if (joinDate && days.length > 0) {
+    const joinTime = new Date(joinDate).setHours(0, 0, 0, 0);
+    const validDays = days.filter(d => {
+      const dTime = new Date(d.dateStr).setHours(0, 0, 0, 0);
+      return dTime >= joinTime && d.isStandardWorkday;
+    });
+    if (validDays.length > 0 && validDays.length < days.filter(d => d.isStandardWorkday).length) {
+      proratedWorkingDays = validDays.length;
+      effectiveNormHours = proratedWorkingDays * 8;
+    }
+  }
+
+  // Base hourly rate based on full standard norm (R = Gross / Norm)
+  const hourlyBaseRate = safeBaseGross / (Number(normHours) || 168);
 
   let totalWorkedHours = 0;
   let weekdayHours = 0;
@@ -143,29 +199,49 @@ export function calculateSalary({
   let totalBreakHours = 0;
   let totalDaysWorked = 0;
   let totalOffDays = 0;
+  let totalPendingDays = 0;
+
+  // Daily and weekly tracking
+  let dailyOvertimeHoursTotal = 0;
+  let dailyRegularHoursTotal = 0;
+
+  const weeklyBuckets = {};
 
   // Process all days in the month
   days.forEach(day => {
     const shift = shifts[day.dateStr] || { isOff: day.isWeekend };
     const { workedHours, breakHours } = calculateShiftDayHours(shift);
 
+    if (shift.isOff) {
+      totalOffDays++;
+    } else if (workedHours === 0) {
+      totalPendingDays++;
+    }
+
     if (workedHours > 0) {
       totalDaysWorked++;
       totalWorkedHours += workedHours;
       totalBreakHours += breakHours;
 
+      // Daily regular vs overtime split (> 8h standard threshold)
+      const dayRegular = Math.min(workedHours, 8);
+      const dayOvertime = Math.max(0, workedHours - 8);
+      dailyRegularHoursTotal += dayRegular;
+      dailyOvertimeHoursTotal += dayOvertime;
+
+      // Weekly bucket grouping
+      const dObj = new Date(day.dateStr);
+      const wKey = getWeekKey(dObj);
+      if (!weeklyBuckets[wKey]) weeklyBuckets[wKey] = 0;
+      weeklyBuckets[wKey] += workedHours;
+
       if (day.isHoliday) {
-        // Legal holiday hours
         holidayHours += workedHours;
       } else if (day.isWeekend) {
-        // Weekend hours
         weekendHours += workedHours;
       } else {
-        // Regular weekday hours
         weekdayHours += workedHours;
       }
-    } else {
-      totalOffDays++;
     }
   });
 
@@ -174,20 +250,39 @@ export function calculateSalary({
   holidayHours = Math.round(holidayHours * 100) / 100;
   weekdayHours = Math.round(weekdayHours * 100) / 100;
   totalBreakHours = Math.round(totalBreakHours * 100) / 100;
+  dailyOvertimeHoursTotal = Math.round(dailyOvertimeHoursTotal * 100) / 100;
+  dailyRegularHoursTotal = Math.round(dailyRegularHoursTotal * 100) / 100;
 
-  // Overtime hours: any worked hours exceeding the monthly norm
-  const overtimeHours = Math.max(0, Math.round((totalWorkedHours - safeNormHours) * 100) / 100);
-  
-  // Standard regular hours up to monthly norm
-  const regularNormHoursWorked = Math.min(totalWorkedHours, safeNormHours);
+  // Calculate Overtime Hours based on selected mode
+  let overtimeHours = 0;
+  let regularEarnedHours = 0;
+
+  if (overtimeMode === 'daily') {
+    // 1. Daily Overtime: Sum of all hours exceeding 8h on each day
+    overtimeHours = dailyOvertimeHoursTotal;
+    regularEarnedHours = dailyRegularHoursTotal;
+  } else if (overtimeMode === 'weekly') {
+    // 2. Weekly Overtime: Sum of hours exceeding 40h in each calendar week
+    let weeklyOvertimeTotal = 0;
+    Object.values(weeklyBuckets).forEach(hrs => {
+      if (hrs > 40) {
+        weeklyOvertimeTotal += (hrs - 40);
+      }
+    });
+    overtimeHours = Math.round(weeklyOvertimeTotal * 100) / 100;
+    regularEarnedHours = Math.max(0, totalWorkedHours - overtimeHours);
+  } else {
+    // 3. Monthly Overtime: Hours exceeding the effective norm
+    overtimeHours = Math.max(0, Math.round((totalWorkedHours - effectiveNormHours) * 100) / 100);
+    regularEarnedHours = Math.min(totalWorkedHours, effectiveNormHours);
+  }
 
   // BASE REGULAR GROSS
-  // If the employee fulfilled the norm, base salary is earned. If less, prorated.
   let regularGross = 0;
-  if (totalWorkedHours >= safeNormHours) {
+  if (regularEarnedHours >= effectiveNormHours) {
     regularGross = safeBaseGross;
   } else {
-    regularGross = totalWorkedHours * hourlyBaseRate;
+    regularGross = regularEarnedHours * hourlyBaseRate;
   }
 
   // ALLOWANCE CALCULATIONS (Active based on toggles)
@@ -202,7 +297,6 @@ export function calculateSalary({
     : 0;
 
   // 3. Overtime Pay: Overtime hours are compensated at base rate + 75% bonus rate (175% total)
-  // Since regularGross already caps at safeBaseGross (normHours), extra overtime hours earn base + 75% bonus = 1.75 * baseRate
   const overtimePay = toggles.overtime 
     ? overtimeHours * hourlyBaseRate * (1 + BONUS_RATES.overtime)
     : (overtimeHours > 0 ? overtimeHours * hourlyBaseRate : 0);
@@ -230,18 +324,22 @@ export function calculateSalary({
   const cam = Math.round(totalGross * CAM_RATE * 100) / 100;
   const totalEmployerCost = Math.round((totalGross + cam) * 100) / 100;
 
-  // Standard net verification baseline (for standard 5,500 LEI with 0 bonuses)
+  // Standard net baseline
   const standardNetBase = 3217.50;
 
   return {
     // Rates & Baseline
     baseGross: safeBaseGross,
-    normHours: safeNormHours,
+    normHours: effectiveNormHours,
+    fullMonthNormHours: Number(normHours) || 168,
     hourlyBaseRate: Math.round(hourlyBaseRate * 100) / 100,
+    overtimeMode,
+    joinDate,
+    proratedWorkingDays,
     
     // Hours metrics
     totalWorkedHours,
-    regularNormHoursWorked,
+    regularEarnedHours: Math.round(regularEarnedHours * 100) / 100,
     weekdayHours,
     weekendHours,
     holidayHours,
@@ -249,6 +347,7 @@ export function calculateSalary({
     totalBreakHours,
     totalDaysWorked,
     totalOffDays,
+    totalPendingDays,
 
     // Gross Components
     regularGross: Math.round(regularGross * 100) / 100,
@@ -265,7 +364,7 @@ export function calculateSalary({
     netSalary,
     standardNetBase,
 
-    // Employer Cost (informational)
+    // Employer Cost
     cam,
     totalEmployerCost,
 

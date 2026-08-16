@@ -32,6 +32,15 @@ export default function App() {
     }
   });
 
+  // 3. Overtime Mode: Default 'daily' (>8h/day), can be 'weekly' or 'monthly'
+  const [overtimeMode, setOvertimeMode] = useState(() => {
+    try {
+      return localStorage.getItem('shiftpay_overtime_mode') || 'daily';
+    } catch {
+      return 'daily';
+    }
+  });
+
   // Apply theme class to document root element
   useEffect(() => {
     const root = document.documentElement;
@@ -62,6 +71,15 @@ export default function App() {
     setTheme(t => t === 'light' ? 'dark' : 'light');
   };
 
+  const handleOvertimeModeChange = (mode) => {
+    setOvertimeMode(mode);
+    try {
+      localStorage.setItem('shiftpay_overtime_mode', mode);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const t = TRANSLATIONS[lang];
 
   // Calendar Year and Month
@@ -89,17 +107,21 @@ export default function App() {
       return saved ? JSON.parse(saved) : {
         baseGross: DEFAULT_GROSS_BASE,
         employeeName: 'ZidBhai Operator',
-        companyName: 'ZidBhai Enterprise SRL',
+        companyName: 'Enterprise SRL',
         position: 'Operations Specialist',
-        eurRate: RON_EUR_DEFAULT_RATE
+        eurRate: RON_EUR_DEFAULT_RATE,
+        joinDate: '',
+        overtimeMode: 'daily'
       };
     } catch {
       return {
         baseGross: DEFAULT_GROSS_BASE,
         employeeName: 'ZidBhai Operator',
-        companyName: 'ZidBhai Enterprise SRL',
+        companyName: 'Enterprise SRL',
         position: 'Operations Specialist',
-        eurRate: RON_EUR_DEFAULT_RATE
+        eurRate: RON_EUR_DEFAULT_RATE,
+        joinDate: '',
+        overtimeMode: 'daily'
       };
     }
   });
@@ -143,12 +165,12 @@ export default function App() {
             };
           } else {
             initialShifts[d.dateStr] = {
-              mode: 'continuous',
+              mode: 'split',
               isOff: false,
               start1: '11:00',
               end1: '17:00',
               start2: '18:30',
-              end2: '20:30',
+              end2: '23:00',
               continuousStart: '09:00',
               continuousEnd: '17:00'
             };
@@ -190,6 +212,9 @@ export default function App() {
   // Settings update & save
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
+    if (newSettings.overtimeMode) {
+      setOvertimeMode(newSettings.overtimeMode);
+    }
     try {
       localStorage.setItem('shiftpay_settings', JSON.stringify(newSettings));
     } catch (e) {
@@ -296,6 +321,25 @@ export default function App() {
     }
   };
 
+  const handleCopyFromPrevious = (targetDateStr) => {
+    const currentIdx = days.findIndex(d => d.dateStr === targetDateStr);
+    if (currentIdx > 0) {
+      const prevDay = days[currentIdx - 1];
+      const prevShift = shifts[prevDay.dateStr];
+      if (prevShift) {
+        const updated = {
+          ...shifts,
+          [targetDateStr]: {
+            ...prevShift,
+            isOff: false
+          }
+        };
+        setShifts(updated);
+        localStorage.setItem(`shiftpay_shifts_${selectedYear}_${selectedMonth}`, JSON.stringify(updated));
+      }
+    }
+  };
+
   // Perform calculations
   const calcResult = useMemo(() => {
     return calculateSalary({
@@ -303,9 +347,11 @@ export default function App() {
       normHours: normInfo.normHours,
       days,
       shifts,
-      toggles
+      toggles,
+      overtimeMode,
+      joinDate: settings.joinDate
     });
-  }, [settings.baseGross, normInfo.normHours, days, shifts, toggles]);
+  }, [settings.baseGross, settings.joinDate, normInfo.normHours, days, shifts, toggles, overtimeMode]);
 
   // Export PDF
   const handleExportPDF = () => {
@@ -350,7 +396,7 @@ export default function App() {
       />
 
       {/* Main Responsive Body Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 md:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 md:pb-8">
         
         {/* 1. Month Navigation & Norm Breakdown */}
         <section>
@@ -374,12 +420,14 @@ export default function App() {
           />
         </section>
 
-        {/* 3. Independent Allowance Toggles */}
+        {/* 3. Independent Allowance Toggles & Overtime Mode */}
         <section>
           <AllowanceToggles
             toggles={toggles}
             onToggleChange={handleToggleChange}
             calcResult={calcResult}
+            overtimeMode={overtimeMode}
+            onOvertimeModeChange={handleOvertimeModeChange}
             currency={currency}
             lang={lang}
           />
@@ -396,6 +444,7 @@ export default function App() {
             onSetWeekendsOff={handleSetWeekendsOff}
             onClearMonth={handleClearMonth}
             onDuplicateRow={handleDuplicateRow}
+            onCopyFromPrevious={handleCopyFromPrevious}
             lang={lang}
           />
         </section>
@@ -437,7 +486,7 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        settings={settings}
+        settings={{ ...settings, overtimeMode }}
         onSave={handleSaveSettings}
         lang={lang}
       />

@@ -3,7 +3,8 @@ import {
   Sliders, 
   CalendarDays, 
   Sparkles, 
-  TrendingUp 
+  TrendingUp,
+  Clock
 } from 'lucide-react';
 import { formatCurrency } from '../utils/salaryEngine';
 import { TRANSLATIONS } from '../utils/i18n';
@@ -12,6 +13,8 @@ export default function AllowanceToggles({
   toggles, 
   onToggleChange, 
   calcResult,
+  overtimeMode = 'daily',
+  onOvertimeModeChange,
   currency = 'RON',
   lang = 'en'
 }) {
@@ -96,8 +99,7 @@ export default function AllowanceToggles({
           return (
             <div
               key={item.id}
-              onClick={() => onToggleChange(item.id, !isActive)}
-              className={`group relative p-3.5 sm:p-4 rounded-xl cursor-pointer transition-all duration-200 border hover-float ${
+              className={`group relative p-3.5 sm:p-4 rounded-xl transition-all duration-200 border ${
                 isActive 
                   ? `bg-white/90 dark:bg-slate-900/90 ${item.activeBorder} shadow-md` 
                   : 'bg-white/40 dark:bg-slate-950/40 border-slate-200/60 dark:border-slate-800/60 opacity-70 hover:opacity-100'
@@ -106,7 +108,10 @@ export default function AllowanceToggles({
               <div className="flex items-start justify-between gap-3">
                 
                 {/* Info & Label */}
-                <div className="space-y-1">
+                <div 
+                  onClick={() => onToggleChange(item.id, !isActive)}
+                  className="space-y-1 cursor-pointer flex-1"
+                >
                   <div className="flex items-center gap-2">
                     <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500'}`} />
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -123,10 +128,13 @@ export default function AllowanceToggles({
                   </div>
                 </div>
 
-                {/* Glassmorphic Switch */}
-                <div className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                  isActive ? 'bg-gradient-to-r ' + item.activeColor : 'bg-slate-300 dark:bg-slate-800'
-                }`}>
+                {/* Switch */}
+                <div 
+                  onClick={() => onToggleChange(item.id, !isActive)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                    isActive ? 'bg-gradient-to-r ' + item.activeColor : 'bg-slate-300 dark:bg-slate-800'
+                  }`}
+                >
                   <span
                     className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
                       isActive ? 'translate-x-5' : 'translate-x-0'
@@ -135,13 +143,60 @@ export default function AllowanceToggles({
                 </div>
               </div>
 
+              {/* Special Overtime Basis Switcher inside Overtime Card */}
+              {item.id === 'overtime' && (
+                <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 space-y-1.5">
+                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">
+                    {t.overtimeModeLabel}
+                  </span>
+                  <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-950 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => onOvertimeModeChange && onOvertimeModeChange('daily')}
+                      className={`py-1 rounded font-bold transition-all ${
+                        overtimeMode === 'daily'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                      title={t.overtimeDailyDesc}
+                    >
+                      {t.overtimeDaily.split(' ')[0]} (&gt;8h)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOvertimeModeChange && onOvertimeModeChange('weekly')}
+                      className={`py-1 rounded font-bold transition-all ${
+                        overtimeMode === 'weekly'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                      title={t.overtimeWeeklyDesc}
+                    >
+                      {t.overtimeWeekly.split(' ')[0]} (&gt;40h)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOvertimeModeChange && onOvertimeModeChange('monthly')}
+                      className={`py-1 rounded font-bold transition-all ${
+                        overtimeMode === 'monthly'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                      title={t.overtimeMonthlyDesc}
+                    >
+                      {t.overtimeMonthly.split(' ')[0]}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Live earnings preview for this allowance */}
-              <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs">
+              <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs">
                 <span className="text-slate-500 dark:text-slate-400 text-[11px]">
                   {t.hoursLogged} <strong className="font-mono text-slate-800 dark:text-slate-200">{item.hours}h</strong>
                 </span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">
-                  {isActive && item.earned > 0 ? `+${formatCurrency(item.earned, currency)}` : (isActive ? '0.00 LEI' : t.disabled)}
+                <span className={`font-mono font-bold text-xs ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                  {isActive ? `+${formatCurrency(item.earned, currency)}` : t.disabled}
                 </span>
               </div>
 
