@@ -6,7 +6,7 @@ import SummaryCards from './components/SummaryCards';
 import DutyGrid from './components/DutyGrid';
 import TaxBreakdownModal from './components/TaxBreakdownModal';
 import SettingsModal from './components/SettingsModal';
-import GlitterCanvas from './components/GlitterCanvas';
+import MobileSummaryBar from './components/MobileSummaryBar';
 
 import { getDaysInMonth, getMonthlyNormInfo } from './utils/romanianCalendar';
 import { calculateSalary, DEFAULT_GROSS_BASE, RON_EUR_DEFAULT_RATE } from './utils/salaryEngine';
@@ -23,7 +23,7 @@ export default function App() {
     }
   });
 
-  // 2. Theme State: Default 'light' (Luminous Liquid White Glass), toggle to 'dark'
+  // 2. Theme State: Default 'light' (Pure White Glossy Glass), toggle to 'dark'
   const [theme, setTheme] = useState(() => {
     try {
       return localStorage.getItem('shiftpay_theme') || 'light';
@@ -333,10 +333,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col antialiased relative bg-[#FAF8F5] dark:bg-[#0B0E14] text-slate-800 dark:text-slate-100 transition-colors duration-300">
-      
-      {/* Golden Glitter & Liquid Shimmer Canvas */}
-      <GlitterCanvas isDark={theme === 'dark'} />
+    <div className="min-h-screen flex flex-col antialiased bg-[#FFFFFF] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative">
       
       {/* Top Navigation & App Bar */}
       <Header
@@ -353,7 +350,7 @@ export default function App() {
       />
 
       {/* Main Responsive Body Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 md:pb-8">
         
         {/* 1. Month Navigation & Norm Breakdown */}
         <section>
@@ -405,8 +402,17 @@ export default function App() {
 
       </main>
 
+      {/* Sticky Mobile Summary Bar (< md screens) */}
+      <MobileSummaryBar
+        calcResult={calcResult}
+        currency={currency}
+        lang={lang}
+        onExportPDF={handleExportPDF}
+        isExporting={isExporting}
+      />
+
       {/* Footer */}
-      <footer className="w-full border-t border-slate-200/80 dark:border-slate-900 bg-white/60 dark:bg-slate-950/80 py-5 text-center text-xs text-slate-500">
+      <footer className="w-full border-t border-slate-200/80 dark:border-slate-900 bg-white/80 dark:bg-slate-950/80 py-5 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>
             © {selectedYear} <strong>{t.appTitle}</strong> // {t.appSubtitle}.

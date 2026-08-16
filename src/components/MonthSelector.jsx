@@ -4,8 +4,9 @@ import {
   ChevronRight, 
   Calendar as CalendarIcon, 
   Clock, 
+  Sun,
   Sparkles,
-  Sun
+  RotateCcw
 } from 'lucide-react';
 import { getMonthlyNormInfo, getRomanianHolidays } from '../utils/romanianCalendar';
 import { TRANSLATIONS } from '../utils/i18n';
@@ -44,24 +45,30 @@ export default function MonthSelector({
     }
   };
 
+  const handleJumpToToday = () => {
+    const now = new Date();
+    onYearChange(now.getFullYear());
+    onMonthChange(now.getMonth() + 1);
+  };
+
   return (
-    <div className="w-full liquid-glass rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+    <div className="w-full liquid-glass rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-3.5">
       
       {/* Top bar: Year picker & Main Month Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         
         {/* Current Month & Navigation */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center bg-white/80 dark:bg-slate-950/80 rounded-xl border border-slate-200/80 dark:border-slate-800 p-1 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center bg-white/90 dark:bg-slate-950/80 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-1 shadow-sm">
             <button
               onClick={handlePrevMonth}
-              className="p-1.5 sm:p-2 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg transition-colors touch-target flex items-center justify-center"
+              className="p-1.5 sm:p-2 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-colors touch-target flex items-center justify-center"
               title="Previous Month"
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            <div className="px-3 sm:px-4 py-0.5 sm:py-1 flex flex-col items-center min-w-[120px] sm:min-w-[140px]">
+            <div className="px-3 sm:px-4 py-0.5 sm:py-1 flex flex-col items-center min-w-[110px] sm:min-w-[130px]">
               <span className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 tracking-wide">
                 {t.months[selectedMonth - 1]}
               </span>
@@ -72,7 +79,7 @@ export default function MonthSelector({
 
             <button
               onClick={handleNextMonth}
-              className="p-1.5 sm:p-2 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg transition-colors touch-target flex items-center justify-center"
+              className="p-1.5 sm:p-2 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-colors touch-target flex items-center justify-center"
               title="Next Month"
             >
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -80,7 +87,7 @@ export default function MonthSelector({
           </div>
 
           {/* Year selector dropdown */}
-          <div className="flex items-center bg-white/80 dark:bg-slate-950/80 rounded-xl border border-slate-200/80 dark:border-slate-800 px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-sm">
+          <div className="flex items-center bg-white/90 dark:bg-slate-950/80 rounded-2xl border border-slate-200/90 dark:border-slate-800 px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-sm">
             <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 mr-1.5" />
             <select
               value={selectedYear}
@@ -94,18 +101,28 @@ export default function MonthSelector({
               ))}
             </select>
           </div>
+
+          {/* Jump to Today Button */}
+          <button
+            onClick={handleJumpToToday}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors touch-target shadow-sm"
+            title="Jump to Today's Month"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>{t.jumpToToday}</span>
+          </button>
         </div>
 
         {/* Dynamic Norm & Holiday Badges */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-800 dark:text-cyan-300 text-xs font-semibold">
-            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400" />
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-800 dark:text-cyan-300 text-xs font-semibold shadow-sm">
+            <Clock className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
             <span>{t.monthlyNorm}: <strong className="font-mono text-slate-900 dark:text-white font-bold">{normInfo.normHours}h</strong> ({normInfo.workingDays} {t.workingDays})</span>
           </div>
 
           {monthHolidays.length > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-semibold">
-              <Sun className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-semibold shadow-sm">
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
               <span>{monthHolidays.length} {monthHolidays.length === 1 ? t.legalHoliday : t.legalHolidays}</span>
             </div>
           )}
@@ -113,8 +130,8 @@ export default function MonthSelector({
 
       </div>
 
-      {/* 12 Months Fast-Select Pill Row (Horizontal scroll on mobile) */}
-      <div className="flex overflow-x-auto pb-1 sm:pb-0 sm:grid sm:grid-cols-6 lg:grid-cols-12 gap-1.5 pt-2 border-t border-amber-200/60 dark:border-slate-800/60 scrollbar-none">
+      {/* 12 Months Fast-Select Pill Row */}
+      <div className="flex overflow-x-auto pb-1 sm:pb-0 sm:grid sm:grid-cols-6 lg:grid-cols-12 gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 scrollbar-none">
         {t.months.map((mName, idx) => {
           const mNum = idx + 1;
           const isSelected = mNum === selectedMonth;
@@ -124,8 +141,8 @@ export default function MonthSelector({
               onClick={() => onMonthChange(mNum)}
               className={`py-1.5 px-2.5 sm:px-2 text-xs font-semibold rounded-xl transition-all duration-150 text-center shrink-0 sm:shrink ${
                 isSelected
-                  ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-slate-950 font-bold shadow-md shadow-amber-500/25 scale-[1.02]'
-                  : 'bg-white/80 dark:bg-slate-950/40 hover:bg-amber-50/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-200 border border-amber-200/60 dark:border-slate-800/60'
+                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-bold shadow-md shadow-cyan-600/20 scale-[1.02]'
+                  : 'bg-white/80 dark:bg-slate-950/40 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200/80 dark:border-slate-800/60'
               }`}
             >
               {mName.substring(0, 3)}

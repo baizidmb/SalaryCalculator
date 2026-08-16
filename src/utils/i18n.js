@@ -25,6 +25,7 @@ export const TRANSLATIONS = {
     allDays: 'All',
     workedDays: 'Worked Only',
     weekendHolidays: 'Weekends & Holidays',
+    jumpToToday: 'Today',
     
     // Summary Cards
     netTakeHome: 'Net Take-Home Pay',
@@ -87,11 +88,11 @@ export const TRANSLATIONS = {
     autoSaveNotice: 'All entries auto-save in your browser (localStorage).',
     noDaysMatchingFilter: 'No days match the selected filter.',
     
-    // Shift Row Controls
+    // Shift Row Controls & Presets
     standardWorkday: 'Standard Workday',
     nonWorkday: 'Non-working day',
     weekendBadge: 'Weekend',
-    splitMode: 'Split',
+    splitMode: 'Split Shift',
     continuousMode: 'Continuous',
     slot1: 'Slot 1',
     slot2: 'Slot 2',
@@ -99,8 +100,12 @@ export const TRANSLATIONS = {
     interval: 'Interval',
     offDayLabel: 'Rest Day (OFF - 0 hrs)',
     setOff: 'Set OFF',
-    activateDay: 'Activate Day',
+    activateDay: 'Active Day',
     duplicateToNext: 'Copy to next day',
+    presetsLabel: 'Presets:',
+    preset8h: '8h Standard',
+    presetSplit: '10.5h Split',
+    presetOff: 'Rest (OFF)',
     
     // Modals
     fiscalGuideTitle: 'Romanian Fiscal Code & Labor Law Guide',
@@ -121,6 +126,10 @@ export const TRANSLATIONS = {
     
     // Confirmations & Prompts
     confirmResetMonth: 'Are you sure you want to reset all shift logs for this month?',
+    
+    // Mobile bar
+    mobileNet: 'Net',
+    mobileHours: 'Hours',
     
     // Months & Days
     months: [
@@ -153,6 +162,7 @@ export const TRANSLATIONS = {
     allDays: 'Toate',
     workedDays: 'Doar Lucrate',
     weekendHolidays: 'Weekend / Sărbători',
+    jumpToToday: 'Astăzi',
     
     // Summary Cards
     netTakeHome: 'Salariu Net de Plată',
@@ -215,11 +225,11 @@ export const TRANSLATIONS = {
     autoSaveNotice: 'Datele se salvează automat în browser (localStorage).',
     noDaysMatchingFilter: 'Nicio zi nu corespunde filtrului selectat.',
     
-    // Shift Row Controls
+    // Shift Row Controls & Presets
     standardWorkday: 'Zi lucrătoare normă',
     nonWorkday: 'Zi nelucrătoare',
     weekendBadge: 'Weekend',
-    splitMode: 'Split',
+    splitMode: 'Tură Split',
     continuousMode: 'Continuu',
     slot1: 'Tura 1',
     slot2: 'Tura 2',
@@ -229,6 +239,10 @@ export const TRANSLATIONS = {
     setOff: 'Setează OFF',
     activateDay: 'Activează Zi',
     duplicateToNext: 'Copiază în ziua următoare',
+    presetsLabel: 'Preset:',
+    preset8h: '8h Standard',
+    presetSplit: '10.5h Split',
+    presetOff: 'Liber (OFF)',
     
     // Modals
     fiscalGuideTitle: 'Ghid de Calcul Fiscal & Legislația Muncii',
@@ -249,6 +263,10 @@ export const TRANSLATIONS = {
     
     // Confirmations & Prompts
     confirmResetMonth: 'Sigur doriți să resetați toate turele pentru această lună?',
+    
+    // Mobile bar
+    mobileNet: 'Net',
+    mobileHours: 'Ore',
     
     // Months & Days
     months: [
