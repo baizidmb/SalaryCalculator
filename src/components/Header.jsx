@@ -48,7 +48,7 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-30 w-full liquid-glass border-b border-slate-200/80 dark:border-slate-800/80 shadow-sm transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
+      <div className="max-w-[1760px] mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
         
         {/* Brand & Logo */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
