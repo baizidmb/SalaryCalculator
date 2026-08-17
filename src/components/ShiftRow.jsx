@@ -19,19 +19,19 @@ import { TRANSLATIONS } from '../utils/i18n';
 // Field-specific suggestion time arrays requested by user
 const SUGGESTIONS = {
   start1: {
-    label: 'Slot 1 Start (7 - 12)',
+    label: 'Shift 1 Start (7 - 12)',
     times: ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00']
   },
   end1: {
-    label: 'Slot 1 End (3 - 6 PM)',
+    label: 'Shift 1 End (3 - 6 PM)',
     times: ['15:00', '16:00', '17:00', '18:00']
   },
   start2: {
-    label: 'Slot 2 Start (5 - 8 PM)',
+    label: 'Shift 2 Start (5 - 8 PM)',
     times: ['17:00', '18:00', '18:30', '19:00', '20:00']
   },
   end2: {
-    label: 'Slot 2 End (9 - 12 PM)',
+    label: 'Shift 2 End (9 - 12 PM)',
     times: ['21:00', '22:00', '23:00', '00:00']
   },
   continuousStart: {

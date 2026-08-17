@@ -143,7 +143,7 @@ export function exportDutySheetPDF({
     },
     { 
       label: isRo ? 'VENIT NET DE PLATĂ' : 'FINAL NET TAKE-HOME', 
-      val: `${calcResult.netSalary.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} LEI`,
+      val: `${calcResult.netSalary.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} RON`,
       highlight: true 
     }
   ];
@@ -267,21 +267,21 @@ export function exportDutySheetPDF({
 
   // 6. FISCAL CASCADE TABLE
   const taxRows = [
-    [isRo ? '1. Salariu Bază Brut (Regular)' : '1. Regular Base Gross Salary', `${calcResult.regularGross.toFixed(2)} LEI`],
-    [isRo ? '2. Spor Weekend (+30% Art. 137)' : '2. Weekend Allowance (+30% Art. 137)', `${calcResult.weekendBonus.toFixed(2)} LEI`],
-    [isRo ? '3. Spor Sărbători Legale (+100% Art. 142)' : '3. Statutory Holiday Allowance (+100% Art. 142)', `${calcResult.holidayBonus.toFixed(2)} LEI`],
-    [isRo ? '4. Plata Ore Suplimentare (+75% Art. 120)' : '4. Overtime Compensation (+75% Art. 120)', `${calcResult.overtimePay.toFixed(2)} LEI`],
-    [isRo ? 'TOTAL VENIT BRUT REALIZAT' : 'TOTAL REALIZED GROSS EARNINGS', `${calcResult.totalGross.toFixed(2)} LEI`],
-    [isRo ? '  - CAS Pensie (25%)' : '  - CAS Pension Security (25%)', `-${calcResult.cas.toFixed(2)} LEI`],
-    [isRo ? '  - CASS Sănătate (10%)' : '  - CASS Health Insurance (10%)', `-${calcResult.cass.toFixed(2)} LEI`],
-    [isRo ? '  = Bază Impozabilă' : '  = Taxable Income Base', `${calcResult.taxableBase.toFixed(2)} LEI`],
-    [isRo ? '  - Impozit pe Venit (10%)' : '  - Personal Income Tax (10%)', `-${calcResult.impozit.toFixed(2)} LEI`],
-    [isRo ? 'TOTAL SALARIU NET DE PLATĂ' : 'TOTAL FINAL NET TAKE-HOME PAY', `${calcResult.netSalary.toFixed(2)} LEI`],
+    [isRo ? '1. Salariu Bază Brut (Regular)' : '1. Regular Base Gross Salary', `${calcResult.regularGross.toFixed(2)} RON`],
+    [isRo ? '2. Spor Weekend (+30% Art. 137)' : '2. Weekend Allowance (+30% Art. 137)', `${calcResult.weekendBonus.toFixed(2)} RON`],
+    [isRo ? '3. Spor Sărbători Legale (+100% Art. 142)' : '3. Statutory Holiday Allowance (+100% Art. 142)', `${calcResult.holidayBonus.toFixed(2)} RON`],
+    [isRo ? '4. Plata Ore Suplimentare (+75% Art. 120)' : '4. Overtime Compensation (+75% Art. 120)', `${calcResult.overtimePay.toFixed(2)} RON`],
+    [isRo ? 'TOTAL VENIT BRUT REALIZAT' : 'TOTAL REALIZED GROSS EARNINGS', `${calcResult.totalGross.toFixed(2)} RON`],
+    [isRo ? '  - CAS Pensie (25%)' : '  - CAS Pension Security (25%)', `-${calcResult.cas.toFixed(2)} RON`],
+    [isRo ? '  - CASS Sănătate (10%)' : '  - CASS Health Insurance (10%)', `-${calcResult.cass.toFixed(2)} RON`],
+    [isRo ? '  = Bază Impozabilă' : '  = Taxable Income Base', `${calcResult.taxableBase.toFixed(2)} RON`],
+    [isRo ? '  - Impozit pe Venit (10%)' : '  - Personal Income Tax (10%)', `-${calcResult.impozit.toFixed(2)} RON`],
+    [isRo ? 'TOTAL SALARIU NET DE PLATĂ' : 'TOTAL FINAL NET TAKE-HOME PAY', `${calcResult.netSalary.toFixed(2)} RON`],
   ];
 
   autoTable(doc, {
     startY: finalY,
-    head: [[isRo ? 'Cascadă Calcul Fiscal (Codul Fiscal Legea 227/2015)' : 'Fiscal Calculation Waterfall (Romanian Fiscal Code)', isRo ? 'Sumă (LEI)' : 'Amount (LEI)']],
+    head: [[isRo ? 'Cascadă Calcul Fiscal (Codul Fiscal Legea 227/2015)' : 'Fiscal Calculation Waterfall (Romanian Fiscal Code)', isRo ? 'Sumă (RON)' : 'Amount (RON)']],
     body: taxRows,
     theme: 'plain',
     tableWidth: 120,
