@@ -2,9 +2,9 @@ import React, { useState, useRef } from 'react';
 import { 
   Calendar, 
   Trash2, 
-  Filter,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Sun
 } from 'lucide-react';
 import ShiftRow from './ShiftRow';
 import { calculateShiftDayHours } from '../utils/salaryEngine';
@@ -57,6 +57,7 @@ export default function DutyGrid({
   // Calculate day counts for filter badges
   let filledCount = 0;
   let pendingCount = 0;
+  let offCount = 0;
 
   days.forEach(d => {
     const shift = shifts[d.dateStr] || { isOff: d.isWeekend };
@@ -65,6 +66,8 @@ export default function DutyGrid({
       filledCount++;
     } else if (!shift.isOff && workedHours === 0) {
       pendingCount++;
+    } else if (shift.isOff || d.isWeekend || d.isHoliday) {
+      offCount++;
     }
   });
 
@@ -80,97 +83,100 @@ export default function DutyGrid({
       return !shift.isOff && workedHours === 0;
     }
     if (filterMode === 'holidays_weekends') {
-      return day.isWeekend || day.isHoliday;
+      return day.isWeekend || day.isHoliday || shift.isOff;
     }
     return true; // 'all'
   });
 
   return (
-    <div className="w-full liquid-glass rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-4">
+    <div className="w-full liquid-glass rounded-3xl p-3.5 sm:p-5 shadow-sm space-y-3.5 border border-white/90 dark:border-white/10">
       
-      {/* Top Toolbar: Title + Filter Tabs + Reset Month Button */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
+      {/* 🌟 2-TIER CLEAN TOOLBAR: 100% CONTAINED, ZERO OVERFLOW ON MOBILE & PC */}
+      <div className="space-y-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
         
-        {/* Title */}
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm">
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-              {t.dutySheetTitle}
-            </h2>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-              • {t.dutySheetSubtitle}
-            </span>
-          </div>
-        </div>
-
-        {/* Filter Pills & Reset Month in clean unified row */}
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        {/* Tier 1: Title & Subtitle + Reset Month Button */}
+        <div className="flex items-center justify-between gap-2">
           
-          <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-inner text-xs overflow-x-auto whitespace-nowrap scrollbar-none">
-            <button
-              onClick={() => setFilterMode('all')}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
-                filterMode === 'all'
-                  ? 'bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-300 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-            >
-              {t.allDays} <span className="text-[10px] font-normal opacity-70">({days.length})</span>
-            </button>
-
-            <button
-              onClick={() => setFilterMode('filled')}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
-                filterMode === 'filled'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
-              }`}
-            >
-              <CheckCircle2 className="w-3 h-3" />
-              <span>{t.filledDaysFilter}</span>
-              <span className="text-[10px] font-mono px-1 rounded bg-black/10">
-                {filledCount}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm shrink-0">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="flex items-baseline gap-2 min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight truncate">
+                {t.dutySheetTitle}
+              </h2>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium hidden xs:inline shrink-0">
+                • {days.length} {t.daysInMonth}
               </span>
-            </button>
-
-            <button
-              onClick={() => setFilterMode('pending')}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
-                filterMode === 'pending'
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
-              }`}
-            >
-              <AlertCircle className="w-3 h-3" />
-              <span>{t.pendingDaysFilter}</span>
-              <span className="text-[10px] font-mono px-1 rounded bg-black/10">
-                {pendingCount}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setFilterMode('holidays_weekends')}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
-                filterMode === 'holidays_weekends'
-                  ? 'bg-cyan-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400'
-              }`}
-            >
-              {t.weekendHolidays}
-            </button>
+            </div>
           </div>
 
-          {/* Reset Month Button */}
+          {/* Reset Month Button - Neatly Placed in Top Right */}
           <button
             onClick={onClearMonth}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-semibold transition-colors shadow-sm touch-target ml-auto sm:ml-0"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-bold transition-all shadow-sm touch-target shrink-0"
             title="Reset all days in current month"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>{t.resetMonth}</span>
+            <span className="font-bold">{t.resetMonth}</span>
+          </button>
+
+        </div>
+
+        {/* Tier 2: Responsive Full-Width Filter Tabs */}
+        <div className="w-full flex items-center gap-1 bg-slate-100/90 dark:bg-slate-950/80 p-1 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-inner text-xs overflow-x-auto whitespace-nowrap scrollbar-none">
+          
+          <button
+            onClick={() => setFilterMode('all')}
+            className={`flex-1 min-w-[70px] py-1.5 px-2 rounded-xl font-bold transition-all text-center ${
+              filterMode === 'all'
+                ? 'bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-300 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            {t.allDays} <span className="text-[10px] font-normal opacity-70">({days.length})</span>
+          </button>
+
+          <button
+            onClick={() => setFilterMode('filled')}
+            className={`flex-1 min-w-[80px] py-1.5 px-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
+              filterMode === 'filled'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
+            }`}
+          >
+            <CheckCircle2 className="w-3 h-3 shrink-0" />
+            <span>{t.filledDaysFilter}</span>
+            <span className="text-[10px] font-mono px-1 rounded bg-black/10">
+              {filledCount}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setFilterMode('pending')}
+            className={`flex-1 min-w-[85px] py-1.5 px-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
+              filterMode === 'pending'
+                ? 'bg-amber-500 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
+            }`}
+          >
+            <AlertCircle className="w-3 h-3 shrink-0" />
+            <span>{t.pendingDaysFilter}</span>
+            <span className="text-[10px] font-mono px-1 rounded bg-black/10">
+              {pendingCount}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setFilterMode('holidays_weekends')}
+            className={`flex-1 min-w-[100px] py-1.5 px-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
+              filterMode === 'holidays_weekends'
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400'
+            }`}
+          >
+            <Sun className="w-3 h-3 shrink-0" />
+            <span>{lang === 'ro' ? 'WE & Sărbători' : 'WE & Holidays'}</span>
           </button>
 
         </div>
@@ -192,11 +198,7 @@ export default function DutyGrid({
               continuousEnd: ''
             };
 
-            const isNextAvailable = idx < filteredDays.length - 1;
-            const isPrevAvailable = idx > 0;
-
-            // Only pass active field if THIS day is the active day
-            const currentActiveField = activeDayField?.dateStr === day.dateStr ? activeDayField.field : null;
+            const isCurrentDayActive = activeDayField?.dateStr === day.dateStr;
 
             return (
               <ShiftRow
@@ -208,31 +210,33 @@ export default function DutyGrid({
                 onCopyFromPrevious={onCopyFromPrevious}
                 onFocusNextDay={handleFocusNextDay}
                 registerInputRef={handleRegisterInputRef}
-                activeField={currentActiveField}
-                onSetActiveField={(field) => setActiveDayField(field ? { dateStr: day.dateStr, field } : null)}
-                isNextAvailable={isNextAvailable}
-                isPrevAvailable={isPrevAvailable}
+                activeField={isCurrentDayActive ? activeDayField.field : null}
+                onSetActiveField={(field) => {
+                  if (field) {
+                    setActiveDayField({ dateStr: day.dateStr, field });
+                  } else {
+                    setActiveDayField(null);
+                  }
+                }}
+                isNextAvailable={idx < filteredDays.length - 1}
+                isPrevAvailable={idx > 0}
                 lang={lang}
               />
             );
           })
         ) : (
-          <div className="text-center py-10 liquid-glass rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500">
-            <Filter className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-            <p className="text-sm font-semibold">{t.noDaysMatchingFilter}</p>
+          <div className="text-center py-12 liquid-glass rounded-2xl text-slate-500 dark:text-slate-400 space-y-2">
+            <p className="text-sm font-semibold">
+              {t.noDaysMatchingFilter}
+            </p>
+            <button
+              onClick={() => setFilterMode('all')}
+              className="text-xs text-cyan-600 dark:text-cyan-400 font-bold underline"
+            >
+              Show all days
+            </button>
           </div>
         )}
-      </div>
-
-      {/* Bottom Summary Bar & Auto-Save Notice */}
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200/80 dark:border-slate-800">
-        <div>
-          <span>{t.showingDays} <strong className="font-mono text-slate-800 dark:text-white">{filteredDays.length}</strong> {t.ofDays} {days.length} {t.daysInMonth}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>{t.autoSaveNotice}</span>
-        </div>
       </div>
 
     </div>
