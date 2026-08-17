@@ -20,6 +20,10 @@ export default function DutyGrid({
   lang = 'en'
 }) {
   const [filterMode, setFilterMode] = useState('all'); // 'all' | 'filled' | 'pending' | 'holidays_weekends'
+  
+  // 🌟 EXACTLY ONE GLOBAL ACTIVE FIELD ACROSS THE ENTIRE MONTH
+  const [activeDayField, setActiveDayField] = useState(null); // { dateStr: string, field: string } | null
+  
   const t = TRANSLATIONS[lang];
 
   // Global registry for cross-day Enter key auto-focus
@@ -45,6 +49,8 @@ export default function DutyGrid({
           inputsRegistry.current[nextDay.dateStr].focus();
         }
       }, 70);
+    } else {
+      setActiveDayField(null);
     }
   };
 
@@ -100,52 +106,57 @@ export default function DutyGrid({
           </div>
         </div>
 
-        {/* Filter Tabs & Reset Action */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Filter Pills & Reset Month in clean unified row */}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-950/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto max-w-full shadow-sm scrollbar-none">
+          <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-inner text-xs overflow-x-auto whitespace-nowrap scrollbar-none">
             <button
               onClick={() => setFilterMode('all')}
-              className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                 filterMode === 'all'
-                  ? 'bg-cyan-600 text-white shadow-sm'
+                  ? 'bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-300 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
-              {t.allDays} ({days.length})
+              {t.allDays} <span className="text-[10px] font-normal opacity-70">({days.length})</span>
             </button>
 
             <button
               onClick={() => setFilterMode('filled')}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
                 filterMode === 'filled'
                   ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
               }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{t.filledDaysFilter} ({filledCount})</span>
+              <CheckCircle2 className="w-3 h-3" />
+              <span>{t.filledDaysFilter}</span>
+              <span className="text-[10px] font-mono px-1 rounded bg-black/10">
+                {filledCount}
+              </span>
             </button>
 
             <button
               onClick={() => setFilterMode('pending')}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
                 filterMode === 'pending'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
               }`}
             >
-              <AlertCircle className="w-3.5 h-3.5" />
-              <span>{t.pendingDaysFilter} ({pendingCount})</span>
+              <AlertCircle className="w-3 h-3" />
+              <span>{t.pendingDaysFilter}</span>
+              <span className="text-[10px] font-mono px-1 rounded bg-black/10">
+                {pendingCount}
+              </span>
             </button>
 
             <button
               onClick={() => setFilterMode('holidays_weekends')}
-              className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 touch-target ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                 filterMode === 'holidays_weekends'
-                  ? 'bg-slate-700 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400'
               }`}
             >
               {t.weekendHolidays}
@@ -184,6 +195,9 @@ export default function DutyGrid({
             const isNextAvailable = idx < filteredDays.length - 1;
             const isPrevAvailable = idx > 0;
 
+            // Only pass active field if THIS day is the active day
+            const currentActiveField = activeDayField?.dateStr === day.dateStr ? activeDayField.field : null;
+
             return (
               <ShiftRow
                 key={day.dateStr}
@@ -194,6 +208,8 @@ export default function DutyGrid({
                 onCopyFromPrevious={onCopyFromPrevious}
                 onFocusNextDay={handleFocusNextDay}
                 registerInputRef={handleRegisterInputRef}
+                activeField={currentActiveField}
+                onSetActiveField={(field) => setActiveDayField(field ? { dateStr: day.dateStr, field } : null)}
                 isNextAvailable={isNextAvailable}
                 isPrevAvailable={isPrevAvailable}
                 lang={lang}

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { 
   Sparkles, 
   Moon, 
@@ -9,39 +9,20 @@ import {
   CheckCircle2,
   RotateCcw,
   Sun,
-  Plus,
-  Clock
+  Plus
 } from 'lucide-react';
 import SmartTimeInput from './SmartTimeInput';
 import { calculateShiftDayHours, decimalToTimeString } from '../utils/salaryEngine';
 import { TRANSLATIONS } from '../utils/i18n';
 
-// Field-specific suggestion time arrays requested by user
-const SUGGESTIONS = {
-  start1: {
-    label: 'Shift 1 Start (7 - 12)',
-    times: ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00']
-  },
-  end1: {
-    label: 'Shift 1 End (3 - 6 PM)',
-    times: ['15:00', '16:00', '17:00', '18:00']
-  },
-  start2: {
-    label: 'Shift 2 Start (5 - 8 PM)',
-    times: ['17:00', '18:00', '18:30', '19:00', '20:00']
-  },
-  end2: {
-    label: 'Shift 2 End (9 - 12 PM)',
-    times: ['21:00', '22:00', '23:00', '00:00']
-  },
-  continuousStart: {
-    label: 'Start (7 - 11)',
-    times: ['07:00', '08:00', '09:00', '10:00', '11:00']
-  },
-  continuousEnd: {
-    label: 'End (3 - 7 PM)',
-    times: ['15:00', '16:00', '17:00', '18:00', '19:00']
-  }
+// Field-specific suggestion time arrays requested by user - Pure minimal times only
+const SUGGESTION_TIMES = {
+  start1: ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00'],
+  end1: ['15:00', '16:00', '17:00', '18:00'],
+  start2: ['17:00', '18:00', '18:30', '19:00', '20:00'],
+  end2: ['21:00', '22:00', '23:00', '00:00'],
+  continuousStart: ['07:00', '08:00', '09:00', '10:00', '11:00'],
+  continuousEnd: ['15:00', '16:00', '17:00', '18:00', '19:00']
 };
 
 export default function ShiftRow({
@@ -52,6 +33,8 @@ export default function ShiftRow({
   onCopyFromPrevious,
   onFocusNextDay,
   registerInputRef,
+  activeField,
+  onSetActiveField,
   isNextAvailable,
   isPrevAvailable,
   lang = 'en'
@@ -59,9 +42,6 @@ export default function ShiftRow({
   const t = TRANSLATIONS[lang];
   const isOff = !!shiftData?.isOff;
   const mode = shiftData?.mode || 'split';
-
-  // Active focused field for rendering floating bubble suggestions
-  const [activeField, setActiveField] = useState(null);
 
   // Input refs for automatic focus advancing
   const start1Ref = useRef(null);
@@ -74,7 +54,7 @@ export default function ShiftRow({
 
   // Helper to focus input reliably across desktop and mobile devices
   const focusInput = (ref, fieldName) => {
-    setActiveField(fieldName);
+    if (onSetActiveField) onSetActiveField(fieldName);
     if (ref && ref.current) {
       ref.current.focus();
       if (typeof ref.current.select === 'function') {
@@ -120,14 +100,14 @@ export default function ShiftRow({
       } else if (fromField === 'start2') {
         focusInput(end2Ref, 'end2');
       } else if (fromField === 'end2') {
-        setActiveField(null);
+        if (onSetActiveField) onSetActiveField(null);
         if (onFocusNextDay) onFocusNextDay(day.dateStr);
       }
     } else {
       if (fromField === 'continuousStart') {
         focusInput(continuousEndRef, 'continuousEnd');
       } else if (fromField === 'continuousEnd') {
-        setActiveField(null);
+        if (onSetActiveField) onSetActiveField(null);
         if (onFocusNextDay) onFocusNextDay(day.dateStr);
       }
     }
@@ -140,16 +120,22 @@ export default function ShiftRow({
     advanceFromField(currentField);
   };
 
-  const handleToggleOff = () => {
+  const handleToggleOff = (e) => {
+    if (e) {
+      e.stopPropagation();
+    }
     const nextIsOff = !isOff;
-    setActiveField(null);
+    if (onSetActiveField) onSetActiveField(null);
     onChange(day.dateStr, {
       ...shiftData,
       isOff: nextIsOff
     });
   };
 
-  const handleActivateDay = () => {
+  const handleActivateDay = (e) => {
+    if (e) {
+      e.stopPropagation();
+    }
     onChange(day.dateStr, {
       ...shiftData,
       isOff: false
@@ -163,7 +149,10 @@ export default function ShiftRow({
     }, 50);
   };
 
-  const handleModeChange = (newMode) => {
+  const handleModeChange = (newMode, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
     onChange(day.dateStr, {
       ...shiftData,
       mode: newMode,
@@ -186,8 +175,8 @@ export default function ShiftRow({
     cardBorderAndBg = 'border-amber-400 dark:border-amber-500 bg-amber-50/60 dark:bg-amber-950/30 shadow-md shadow-amber-500/10';
   }
 
-  // Get active suggestion config
-  const activeSuggestionConfig = activeField ? SUGGESTIONS[activeField] : null;
+  // Active suggestions list for this specific active field
+  const currentTimes = activeField ? SUGGESTION_TIMES[activeField] : null;
 
   return (
     <div className={`rounded-2xl border transition-all duration-200 relative ${cardBorderAndBg}`}>
@@ -280,14 +269,14 @@ export default function ShiftRow({
 
         </div>
 
-        {/* TIME INPUTS SECTION WITH FLOATING BUBBLE POPUP */}
+        {/* TIME INPUTS SECTION WITH MINIMAL BUBBLES */}
         {!isOff ? (
           <div className="space-y-2.5 pt-1 relative">
             
             {/* Mode Switcher */}
             <div className="grid grid-cols-2 bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shadow-sm text-xs">
               <button
-                onClick={() => handleModeChange('split')}
+                onClick={(e) => handleModeChange('split', e)}
                 className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
                   mode === 'split' 
                     ? 'bg-cyan-600 text-white shadow-sm' 
@@ -299,7 +288,7 @@ export default function ShiftRow({
               </button>
 
               <button
-                onClick={() => handleModeChange('continuous')}
+                onClick={(e) => handleModeChange('continuous', e)}
                 className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
                   mode === 'continuous' 
                     ? 'bg-emerald-600 text-white shadow-sm' 
@@ -314,45 +303,37 @@ export default function ShiftRow({
             {/* Inputs Container with Relative Anchor */}
             <div className="relative">
               
-              {/* 🫧 FLOATING SUPER GLOSSY HIGH-RADIUS BUBBLE CAPSULE */}
-              {activeSuggestionConfig && (
+              {/* 🫧 FLOATING SUPER MINIMAL HIGH-RADIUS BUBBLE PILL (PURE TIMES ONLY, ZERO CLUTTER) */}
+              {currentTimes && (
                 <div 
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-full max-w-[340px] z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 pointer-events-auto"
+                  onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onTouchStart={(e) => { e.stopPropagation(); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  className="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
                 >
-                  <div className="w-full px-3 py-2 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_40px_rgba(6,182,212,0.3)] shadow-cyan-500/20">
-                    
-                    {/* Header Label */}
-                    <div className="flex items-center justify-between px-2 mb-1 text-[10px] font-bold text-cyan-800 dark:text-cyan-300">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-cyan-600" />
-                        <span>{activeSuggestionConfig.label}</span>
-                      </div>
-                      <span className="text-[9px] text-slate-400 font-normal">Tap bubble</span>
-                    </div>
-
-                    {/* Time Bubbles */}
-                    <div className="flex items-center justify-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none py-0.5">
-                      {activeSuggestionConfig.times.map((time) => (
-                        <button
-                          key={time}
-                          type="button"
-                          onPointerDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleSelectSuggestionTime(time);
-                          }}
-                          className="px-3 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-200 shrink-0 touch-manipulation cursor-pointer"
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/20 max-w-[340px] overflow-x-auto whitespace-nowrap scrollbar-none">
+                    {currentTimes.map((time) => (
+                      <button
+                        key={time}
+                        type="button"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSelectSuggestionTime(time);
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 touch-manipulation cursor-pointer"
+                      >
+                        {time}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Micro notch pointing down */}
-                  <div className="w-3 h-3 rotate-45 -mt-1.5 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
+                  <div className="w-2.5 h-2.5 rotate-45 -mt-1 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
                 </div>
               )}
 
@@ -374,7 +355,7 @@ export default function ShiftRow({
                         onChange={(val) => handleFieldChange('start1', val)}
                         onComplete={() => advanceFromField('start1')}
                         onEnterPress={() => advanceFromField('start1')}
-                        onFocus={() => setActiveField('start1')}
+                        onFocus={() => onSetActiveField && onSetActiveField('start1')}
                         placeholder="00:00"
                         className={`w-16 ${activeField === 'start1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
@@ -385,7 +366,7 @@ export default function ShiftRow({
                         onChange={(val) => handleFieldChange('end1', val)}
                         onComplete={() => advanceFromField('end1')}
                         onEnterPress={() => advanceFromField('end1')}
-                        onFocus={() => setActiveField('end1')}
+                        onFocus={() => onSetActiveField && onSetActiveField('end1')}
                         placeholder="00:00"
                         className={`w-16 ${activeField === 'end1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
@@ -406,7 +387,7 @@ export default function ShiftRow({
                         onChange={(val) => handleFieldChange('start2', val)}
                         onComplete={() => advanceFromField('start2')}
                         onEnterPress={() => advanceFromField('start2')}
-                        onFocus={() => setActiveField('start2')}
+                        onFocus={() => onSetActiveField && onSetActiveField('start2')}
                         placeholder="00:00"
                         className={`w-16 ${activeField === 'start2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
@@ -417,7 +398,7 @@ export default function ShiftRow({
                         onChange={(val) => handleFieldChange('end2', val)}
                         onComplete={() => advanceFromField('end2')}
                         onEnterPress={() => advanceFromField('end2')}
-                        onFocus={() => setActiveField('end2')}
+                        onFocus={() => onSetActiveField && onSetActiveField('end2')}
                         placeholder="00:00"
                         className={`w-16 ${activeField === 'end2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
@@ -439,7 +420,7 @@ export default function ShiftRow({
                       onChange={(val) => handleFieldChange('continuousStart', val)}
                       onComplete={() => advanceFromField('continuousStart')}
                       onEnterPress={() => advanceFromField('continuousStart')}
-                      onFocus={() => setActiveField('continuousStart')}
+                      onFocus={() => onSetActiveField && onSetActiveField('continuousStart')}
                       placeholder="00:00"
                       className="w-20"
                     />
@@ -450,7 +431,7 @@ export default function ShiftRow({
                       onChange={(val) => handleFieldChange('continuousEnd', val)}
                       onComplete={() => advanceFromField('continuousEnd')}
                       onEnterPress={() => advanceFromField('continuousEnd')}
-                      onFocus={() => setActiveField('continuousEnd')}
+                      onFocus={() => onSetActiveField && onSetActiveField('continuousEnd')}
                       placeholder="00:00"
                       className="w-20"
                     />
@@ -592,45 +573,42 @@ export default function ShiftRow({
           {!isOff ? (
             <div className="flex-1 flex flex-wrap items-center gap-2.5 relative">
               
-              {/* 🫧 DESKTOP FLOATING SUPER GLOSSY BUBBLE CAPSULE */}
-              {activeSuggestionConfig && (
+              {/* 🫧 DESKTOP FLOATING PURE BUBBLE PILL */}
+              {currentTimes && (
                 <div 
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  className="absolute bottom-full mb-3 left-0 z-50 flex flex-col items-start animate-in fade-in zoom-in-95 duration-200 pointer-events-auto"
+                  onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onTouchStart={(e) => { e.stopPropagation(); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  className="absolute bottom-full mb-2.5 left-0 z-50 flex flex-col items-start animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
                 >
-                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_40px_rgba(6,182,212,0.3)] shadow-cyan-500/20">
-                    
-                    <div className="flex items-center gap-1 text-xs font-bold text-cyan-800 dark:text-cyan-300 shrink-0">
-                      <Clock className="w-3.5 h-3.5 text-cyan-600" />
-                      <span>{activeSuggestionConfig.label}:</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none">
-                      {activeSuggestionConfig.times.map((time) => (
-                        <button
-                          key={time}
-                          type="button"
-                          onPointerDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleSelectSuggestionTime(time);
-                          }}
-                          className="px-3 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-200 shrink-0 cursor-pointer"
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/20 overflow-x-auto whitespace-nowrap scrollbar-none">
+                    {currentTimes.map((time) => (
+                      <button
+                        key={time}
+                        type="button"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSelectSuggestionTime(time);
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 cursor-pointer"
+                      >
+                        {time}
+                      </button>
+                    ))}
                   </div>
-                  <div className="w-3 h-3 rotate-45 ml-8 -mt-1.5 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
+                  <div className="w-2.5 h-2.5 rotate-45 ml-8 -mt-1 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
                 </div>
               )}
 
               {/* Mode Switcher */}
               <div className="flex items-center bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shrink-0 shadow-sm">
                 <button
-                  onClick={() => handleModeChange('split')}
+                  onClick={(e) => handleModeChange('split', e)}
                   className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
                     mode === 'split' 
                       ? 'bg-cyan-600 text-white shadow-sm' 
@@ -642,7 +620,7 @@ export default function ShiftRow({
                 </button>
 
                 <button
-                  onClick={() => handleModeChange('continuous')}
+                  onClick={(e) => handleModeChange('continuous', e)}
                   className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
                     mode === 'continuous' 
                       ? 'bg-emerald-600 text-white shadow-sm' 
@@ -669,7 +647,7 @@ export default function ShiftRow({
                       onChange={(val) => handleFieldChange('start1', val)}
                       onComplete={() => advanceFromField('start1')}
                       onEnterPress={() => advanceFromField('start1')}
-                      onFocus={() => setActiveField('start1')}
+                      onFocus={() => onSetActiveField && onSetActiveField('start1')}
                       placeholder="00:00"
                       className={`w-16 ${activeField === 'start1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
@@ -680,7 +658,7 @@ export default function ShiftRow({
                       onChange={(val) => handleFieldChange('end1', val)}
                       onComplete={() => advanceFromField('end1')}
                       onEnterPress={() => advanceFromField('end1')}
-                      onFocus={() => setActiveField('end1')}
+                      onFocus={() => onSetActiveField && onSetActiveField('end1')}
                       placeholder="00:00"
                       className={`w-16 ${activeField === 'end1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
@@ -704,7 +682,7 @@ export default function ShiftRow({
                       onChange={(val) => handleFieldChange('start2', val)}
                       onComplete={() => advanceFromField('start2')}
                       onEnterPress={() => advanceFromField('start2')}
-                      onFocus={() => setActiveField('start2')}
+                      onFocus={() => onSetActiveField && onSetActiveField('start2')}
                       placeholder="00:00"
                       className={`w-16 ${activeField === 'start2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
@@ -715,7 +693,7 @@ export default function ShiftRow({
                       onChange={(val) => handleFieldChange('end2', val)}
                       onComplete={() => advanceFromField('end2')}
                       onEnterPress={() => advanceFromField('end2')}
-                      onFocus={() => setActiveField('end2')}
+                      onFocus={() => onSetActiveField && onSetActiveField('end2')}
                       placeholder="00:00"
                       className={`w-16 ${activeField === 'end2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
@@ -733,7 +711,7 @@ export default function ShiftRow({
                     onChange={(val) => handleFieldChange('continuousStart', val)}
                     onComplete={() => advanceFromField('continuousStart')}
                     onEnterPress={() => advanceFromField('continuousStart')}
-                    onFocus={() => setActiveField('continuousStart')}
+                    onFocus={() => onSetActiveField && onSetActiveField('continuousStart')}
                     placeholder="00:00"
                     className="w-20"
                   />
@@ -744,7 +722,7 @@ export default function ShiftRow({
                     onChange={(val) => handleFieldChange('continuousEnd', val)}
                     onComplete={() => advanceFromField('continuousEnd')}
                     onEnterPress={() => advanceFromField('continuousEnd')}
-                    onFocus={() => setActiveField('continuousEnd')}
+                    onFocus={() => onSetActiveField && onSetActiveField('continuousEnd')}
                     placeholder="00:00"
                     className="w-20"
                   />
