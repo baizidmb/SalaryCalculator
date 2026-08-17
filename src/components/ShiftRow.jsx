@@ -60,7 +60,7 @@ export default function ShiftRow({
   const isOff = !!shiftData?.isOff;
   const mode = shiftData?.mode || 'split';
 
-  // Active focused field for rendering floating suggestions
+  // Active focused field for rendering floating bubble suggestions
   const [activeField, setActiveField] = useState(null);
 
   // Input refs for automatic focus advancing
@@ -280,7 +280,7 @@ export default function ShiftRow({
 
         </div>
 
-        {/* TIME INPUTS SECTION WITH FLOATING SUGGESTIONS */}
+        {/* TIME INPUTS SECTION WITH FLOATING BUBBLE POPUP */}
         {!isOff ? (
           <div className="space-y-2.5 pt-1 relative">
             
@@ -314,23 +314,26 @@ export default function ShiftRow({
             {/* Inputs Container with Relative Anchor */}
             <div className="relative">
               
-              {/* 🌟 FLOATING SUPER GLOSSY SUGGESTION CAPSULE (FLOATS DIRECTLY ABOVE THE INPUTS) */}
+              {/* 🫧 FLOATING SUPER GLOSSY HIGH-RADIUS BUBBLE CAPSULE */}
               {activeSuggestionConfig && (
                 <div 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
-                  className="absolute bottom-full mb-2 left-0 right-0 z-40 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200"
+                  className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-full max-w-[340px] z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 pointer-events-auto"
                 >
-                  <div className="w-full max-w-full p-2 rounded-2xl backdrop-blur-2xl bg-white/95 dark:bg-slate-900/95 border border-white/90 dark:border-white/20 shadow-[0_12px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/15">
-                    <div className="flex items-center justify-between gap-1 mb-1.5 text-[10px] font-bold text-cyan-800 dark:text-cyan-300">
+                  <div className="w-full px-3 py-2 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_40px_rgba(6,182,212,0.3)] shadow-cyan-500/20">
+                    
+                    {/* Header Label */}
+                    <div className="flex items-center justify-between px-2 mb-1 text-[10px] font-bold text-cyan-800 dark:text-cyan-300">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-cyan-600" />
                         <span>{activeSuggestionConfig.label}</span>
                       </div>
-                      <span className="text-[9px] text-slate-400 font-normal">Tap to fill & advance</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Tap bubble</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5">
+                    {/* Time Bubbles */}
+                    <div className="flex items-center justify-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none py-0.5">
                       {activeSuggestionConfig.times.map((time) => (
                         <button
                           key={time}
@@ -340,7 +343,7 @@ export default function ShiftRow({
                             e.stopPropagation();
                             handleSelectSuggestionTime(time);
                           }}
-                          className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800 hover:bg-gradient-to-r hover:from-cyan-500 hover:to-emerald-500 hover:text-white dark:hover:text-white rounded-xl border border-white/80 dark:border-slate-700 shadow-sm active:scale-95 transition-all duration-150 shrink-0 touch-manipulation"
+                          className="px-3 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-200 shrink-0 touch-manipulation cursor-pointer"
                         >
                           {time}
                         </button>
@@ -349,7 +352,7 @@ export default function ShiftRow({
                   </div>
 
                   {/* Micro notch pointing down */}
-                  <div className="w-2.5 h-2.5 rotate-45 -mt-1 bg-white/95 dark:bg-slate-900/95 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
+                  <div className="w-3 h-3 rotate-45 -mt-1.5 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
                 </div>
               )}
 
@@ -357,7 +360,7 @@ export default function ShiftRow({
               {mode === 'split' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   
-                  {/* Slot 1 */}
+                  {/* Shift 1 */}
                   <div className={`flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border transition-all shadow-sm ${
                     activeField === 'start1' || activeField === 'end1' 
                       ? 'border-cyan-500/80 ring-2 ring-cyan-500/10' 
@@ -389,7 +392,7 @@ export default function ShiftRow({
                     </div>
                   </div>
 
-                  {/* Slot 2 */}
+                  {/* Shift 2 */}
                   <div className={`flex items-center justify-between bg-white dark:bg-slate-950/80 px-2.5 py-1.5 rounded-xl border transition-all shadow-sm ${
                     activeField === 'start2' || activeField === 'end2' 
                       ? 'border-cyan-500/80 ring-2 ring-cyan-500/10' 
@@ -589,20 +592,21 @@ export default function ShiftRow({
           {!isOff ? (
             <div className="flex-1 flex flex-wrap items-center gap-2.5 relative">
               
-              {/* 🌟 DESKTOP FLOATING GLOSSY SUGGESTION CAPSULE */}
+              {/* 🫧 DESKTOP FLOATING SUPER GLOSSY BUBBLE CAPSULE */}
               {activeSuggestionConfig && (
                 <div 
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
-                  className="absolute bottom-full mb-2 left-0 z-40 flex flex-col items-start animate-in fade-in zoom-in-95 duration-200"
+                  className="absolute bottom-full mb-3 left-0 z-50 flex flex-col items-start animate-in fade-in zoom-in-95 duration-200 pointer-events-auto"
                 >
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl backdrop-blur-2xl bg-white/95 dark:bg-slate-900/95 border border-white/90 dark:border-white/20 shadow-[0_12px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/15">
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_40px_rgba(6,182,212,0.3)] shadow-cyan-500/20">
+                    
                     <div className="flex items-center gap-1 text-xs font-bold text-cyan-800 dark:text-cyan-300 shrink-0">
                       <Clock className="w-3.5 h-3.5 text-cyan-600" />
                       <span>{activeSuggestionConfig.label}:</span>
                     </div>
 
-                    <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap scrollbar-none">
+                    <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none">
                       {activeSuggestionConfig.times.map((time) => (
                         <button
                           key={time}
@@ -612,14 +616,14 @@ export default function ShiftRow({
                             e.stopPropagation();
                             handleSelectSuggestionTime(time);
                           }}
-                          className="px-2.5 py-0.5 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800 hover:bg-gradient-to-r hover:from-cyan-500 hover:to-emerald-500 hover:text-white dark:hover:text-white rounded-xl border border-white/80 dark:border-slate-700 shadow-sm active:scale-95 transition-all duration-150 shrink-0"
+                          className="px-3 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-200 shrink-0 cursor-pointer"
                         >
                           {time}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="w-2.5 h-2.5 rotate-45 ml-6 -mt-1 bg-white/95 dark:bg-slate-900/95 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
+                  <div className="w-3 h-3 rotate-45 ml-8 -mt-1.5 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
                 </div>
               )}
 
@@ -654,7 +658,7 @@ export default function ShiftRow({
               {mode === 'split' ? (
                 <div className="flex flex-wrap items-center gap-2">
                   
-                  {/* Slot 1 */}
+                  {/* Shift 1 */}
                   <div className={`flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border transition-all shadow-sm ${
                     activeField === 'start1' || activeField === 'end1' ? 'border-cyan-500/80 ring-2 ring-cyan-500/10' : 'border-slate-200 dark:border-slate-800'
                   }`}>
@@ -689,7 +693,7 @@ export default function ShiftRow({
                     </div>
                   )}
 
-                  {/* Slot 2 */}
+                  {/* Shift 2 */}
                   <div className={`flex items-center gap-1 bg-white dark:bg-slate-950/80 px-2 py-1 rounded-xl border transition-all shadow-sm ${
                     activeField === 'start2' || activeField === 'end2' ? 'border-cyan-500/80 ring-2 ring-cyan-500/10' : 'border-slate-200 dark:border-slate-800'
                   }`}>
