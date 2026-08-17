@@ -332,7 +332,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col antialiased bg-[#f4f6f9] dark:bg-[#060a12] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-x-hidden">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col antialiased bg-[#f4f6f9] dark:bg-[#060a12] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative">
       
       {/* Seamless Ambient Background Glows */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
@@ -356,13 +356,13 @@ export default function App() {
       />
 
       {/* Main Responsive Body Container - Full Wide Desktop & Responsive Mobile */}
-      <main className="flex-1 max-w-[1720px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5 lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden">
+      <main className="flex-1 min-h-0 max-w-[1760px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 lg:py-4 flex flex-col lg:overflow-hidden">
         
         {/* 🌟 SIDE-BY-SIDE INTERACTIVE DESKTOP LAYOUT (lg+) & CLEAN VERTICAL FLOW ON MOBILE */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start lg:h-full lg:min-h-0">
           
           {/* ⬅️ LEFT MAIN WORKSPACE (lg: 7 cols / xl: 8 cols): ONLY THE DAYS SHEET SCROLLS */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-4 lg:h-full lg:overflow-y-auto pr-1 lg:pr-2.5 pb-28 sm:pb-24 lg:pb-12 scrollbar-thin">
+          <div className="lg:col-span-7 xl:col-span-8 space-y-4 lg:h-full lg:min-h-0 lg:overflow-y-auto pr-1 lg:pr-3 pb-28 sm:pb-24 lg:pb-12 scrollbar-thin">
             
             {/* Mobile Only Month Selector */}
             <div className="lg:hidden">
@@ -391,10 +391,10 @@ export default function App() {
           </div>
 
           {/* ➡️ RIGHT SIDEBAR (lg: 5 cols / xl: 4 cols): PERMANENTLY LOCKED ON SCREEN AT ALL TIMES */}
-          <div className="hidden lg:block lg:col-span-5 xl:col-span-4 lg:h-full lg:overflow-y-auto scrollbar-none space-y-4 pr-1 pb-12">
+          <div className="hidden lg:flex lg:flex-col lg:col-span-5 xl:col-span-4 lg:h-full lg:min-h-0 lg:overflow-y-auto scrollbar-none space-y-4 pr-1 pb-12">
             
             {/* Desktop Month Selector */}
-            <section>
+            <section className="shrink-0">
               <MonthSelector
                 selectedYear={selectedYear}
                 selectedMonth={selectedMonth}
@@ -405,7 +405,7 @@ export default function App() {
             </section>
 
             {/* Desktop Sticky Calculations & Allowances */}
-            <section>
+            <section className="shrink-0">
               <StickySidebarSummary
                 calcResult={calcResult}
                 currency={currency}
