@@ -6,7 +6,7 @@
  * Supports: Daily Overtime (>8h/day), Weekly Overtime (>40h/week), Monthly Overtime, and Prorated Join Dates.
  */
 
-export const DEFAULT_GROSS_BASE = 5500; // Standard Romanian gross contract base in LEI
+export const DEFAULT_GROSS_BASE = 5500; // Standard Romanian gross contract base in RON
 export const CAS_RATE = 0.25;           // 25% Social Security (Pensie)
 export const CASS_RATE = 0.10;          // 10% Health Insurance (Sănătate)
 export const IMPOZIT_RATE = 0.10;       // 10% Income Tax (Impozit pe Venit)
@@ -381,7 +381,7 @@ export function calculateSalary({
  * @returns {string}
  */
 export function formatCurrency(amount, currency = 'RON', eurRate = RON_EUR_DEFAULT_RATE) {
-  if (isNaN(amount)) return currency === 'RON' ? '0,00 LEI' : '€0.00';
+  if (isNaN(amount)) return currency === 'RON' ? '0,00 RON' : '€0.00';
   
   if (currency === 'EUR') {
     const eurVal = amount / (eurRate || RON_EUR_DEFAULT_RATE);
@@ -389,5 +389,5 @@ export function formatCurrency(amount, currency = 'RON', eurRate = RON_EUR_DEFAU
   }
 
   // Romanian formatting (comma as decimal separator, period for thousands)
-  return `${amount.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} LEI`;
+  return `${amount.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RON`;
 }

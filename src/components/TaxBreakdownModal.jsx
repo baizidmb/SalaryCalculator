@@ -59,7 +59,7 @@ export default function TaxBreakdownModal({
               <div>
                 <span className="font-bold text-slate-800 dark:text-slate-200">{t.totalGrossRealized}:</span>
                 <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-                  {lang === 'ro' ? 'Bază' : 'Base'} ({calcResult.regularGross.toFixed(2)} LEI) + {lang === 'ro' ? 'Spor WE' : 'Weekend'} ({calcResult.weekendBonus.toFixed(2)} LEI) + {lang === 'ro' ? 'Spor Sărbători' : 'Holiday'} ({calcResult.holidayBonus.toFixed(2)} LEI) + {lang === 'ro' ? 'Suplimentare' : 'Overtime'} ({calcResult.overtimePay.toFixed(2)} LEI)
+                  {lang === 'ro' ? 'Bază' : 'Base'} ({calcResult.regularGross.toFixed(2)} RON) + {lang === 'ro' ? 'Spor WE' : 'Weekend'} ({calcResult.weekendBonus.toFixed(2)} RON) + {lang === 'ro' ? 'Spor Sărbători' : 'Holiday'} ({calcResult.holidayBonus.toFixed(2)} RON) + {lang === 'ro' ? 'Suplimentare' : 'Overtime'} ({calcResult.overtimePay.toFixed(2)} RON)
                 </p>
               </div>
               <span className="font-mono font-bold text-slate-900 dark:text-white text-sm shrink-0">

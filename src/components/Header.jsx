@@ -80,7 +80,7 @@ export default function Header({
           </div>
           <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-800" />
           <div className="text-slate-500 dark:text-slate-400">
-            {t.contractGross}: <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{baseGross.toLocaleString()} LEI</span>
+            {t.contractGross}: <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{baseGross.toLocaleString()} RON</span>
           </div>
         </div>
 

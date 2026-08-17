@@ -92,7 +92,7 @@ export default function SettingsModal({
                 placeholder="5500"
               />
               <span className="absolute right-3.5 top-2.5 text-xs font-bold text-slate-400">
-                LEI
+                RON
               </span>
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
