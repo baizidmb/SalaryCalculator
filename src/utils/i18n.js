@@ -94,8 +94,8 @@ export const TRANSLATIONS = {
     disabled: 'Disabled',
     
     // Duty Sheet & Grid
-    dutySheetTitle: 'Duty Sheet & Daily Working Hours',
-    dutySheetSubtitle: 'Log shift intervals, split shifts with breaks, and rest days',
+    dutySheetTitle: 'Duty Sheet',
+    dutySheetSubtitle: 'Monthly Timesheet',
     quickActions: 'Quick Actions:',
     fillStandardWeekdays: 'Standard 8h (Mon-Fri)',
     fillSplitTemplate: 'Split Template (10.5h)',
@@ -259,8 +259,8 @@ export const TRANSLATIONS = {
     disabled: 'Dezactivat',
     
     // Duty Sheet & Grid
-    dutySheetTitle: 'Foaie de Pontaj & Evidență Zilnică',
-    dutySheetSubtitle: 'Înregistrează intervalele de lucru, ture frânte (split) și zile libere',
+    dutySheetTitle: 'Foaie de Pontaj',
+    dutySheetSubtitle: 'Pontaj lunar & ture',
     quickActions: 'Acțiuni Rapide:',
     fillStandardWeekdays: 'Normă Standard (8h L-V)',
     fillSplitTemplate: 'Template Split (10.5h)',

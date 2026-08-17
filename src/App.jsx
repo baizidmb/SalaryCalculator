@@ -361,11 +361,11 @@ export default function App() {
         {/* 🌟 SIDE-BY-SIDE INTERACTIVE DESKTOP LAYOUT (lg+) & CLEAN VERTICAL FLOW ON MOBILE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* ⬅️ LEFT MAIN WORKSPACE (lg: 7 cols / xl: 8 cols): MONTH SELECTOR + DUTY TIMESHEET */}
+          {/* ⬅️ LEFT MAIN WORKSPACE (lg: 7 cols / xl: 8 cols): ONLY THE DAYS */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-5">
             
-            {/* 1. Month Navigation & Norm Info */}
-            <section>
+            {/* Mobile Only Month Selector */}
+            <div className="lg:hidden">
               <MonthSelector
                 selectedYear={selectedYear}
                 selectedMonth={selectedMonth}
@@ -373,9 +373,9 @@ export default function App() {
                 onMonthChange={setSelectedMonth}
                 lang={lang}
               />
-            </section>
+            </div>
 
-            {/* 2. Duty Sheet & Shift Logging Grid (Up Front & Center) */}
+            {/* Duty Sheet & Shift Days Logging Grid (All 31 Days) */}
             <section>
               <DutyGrid
                 days={days}
@@ -390,21 +390,37 @@ export default function App() {
 
           </div>
 
-          {/* ➡️ RIGHT STICKY FINANCIAL DASHBOARD (lg: 5 cols / xl: 4 cols): STICKS AS YOU LOG ON PC */}
-          <div className="hidden lg:block lg:col-span-5 xl:col-span-4 sticky top-24 self-start">
-            <StickySidebarSummary
-              calcResult={calcResult}
-              currency={currency}
-              onCurrencyToggle={() => setCurrency(c => c === 'RON' ? 'EUR' : 'RON')}
-              toggles={toggles}
-              onToggleChange={handleToggleChange}
-              overtimeMode={overtimeMode}
-              onOvertimeModeChange={handleOvertimeModeChange}
-              onOpenTaxDetails={() => setIsTaxModalOpen(true)}
-              onExportPDF={handleExportPDF}
-              isExporting={isExporting}
-              lang={lang}
-            />
+          {/* ➡️ RIGHT STICKY SIDEBAR (lg: 5 cols / xl: 4 cols): EVERYTHING ELSE STICKY ON PC */}
+          <div className="hidden lg:block lg:col-span-5 xl:col-span-4 sticky top-20 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto scrollbar-none space-y-4 pr-1">
+            
+            {/* Desktop Month Selector (Sticky at top of side column) */}
+            <section>
+              <MonthSelector
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+                onYearChange={setSelectedYear}
+                onMonthChange={setSelectedMonth}
+                lang={lang}
+              />
+            </section>
+
+            {/* Desktop Sticky Calculations & Allowances */}
+            <section>
+              <StickySidebarSummary
+                calcResult={calcResult}
+                currency={currency}
+                onCurrencyToggle={() => setCurrency(c => c === 'RON' ? 'EUR' : 'RON')}
+                toggles={toggles}
+                onToggleChange={handleToggleChange}
+                overtimeMode={overtimeMode}
+                onOvertimeModeChange={handleOvertimeModeChange}
+                onOpenTaxDetails={() => setIsTaxModalOpen(true)}
+                onExportPDF={handleExportPDF}
+                isExporting={isExporting}
+                lang={lang}
+              />
+            </section>
+            
           </div>
 
         </div>
