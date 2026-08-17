@@ -355,14 +355,14 @@ export default function App() {
         isExporting={isExporting}
       />
 
-      {/* Main Responsive Body Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 pb-32 sm:pb-24 md:pb-12">
+      {/* Main Responsive Body Container - Full Wide Desktop & Responsive Mobile */}
+      <main className="flex-1 max-w-[1720px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5 lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden">
         
         {/* 🌟 SIDE-BY-SIDE INTERACTIVE DESKTOP LAYOUT (lg+) & CLEAN VERTICAL FLOW ON MOBILE */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:h-full">
           
-          {/* ⬅️ LEFT MAIN WORKSPACE (lg: 7 cols / xl: 8 cols): ONLY THE DAYS */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-5">
+          {/* ⬅️ LEFT MAIN WORKSPACE (lg: 7 cols / xl: 8 cols): ONLY THE DAYS SHEET SCROLLS */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-4 lg:h-full lg:overflow-y-auto pr-1 lg:pr-2.5 pb-28 sm:pb-24 lg:pb-12 scrollbar-thin">
             
             {/* Mobile Only Month Selector */}
             <div className="lg:hidden">
@@ -390,10 +390,10 @@ export default function App() {
 
           </div>
 
-          {/* ➡️ RIGHT STICKY SIDEBAR (lg: 5 cols / xl: 4 cols): EVERYTHING ELSE STICKY ON PC */}
-          <div className="hidden lg:block lg:col-span-5 xl:col-span-4 sticky top-20 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto scrollbar-none space-y-4 pr-1">
+          {/* ➡️ RIGHT SIDEBAR (lg: 5 cols / xl: 4 cols): PERMANENTLY LOCKED ON SCREEN AT ALL TIMES */}
+          <div className="hidden lg:block lg:col-span-5 xl:col-span-4 lg:h-full lg:overflow-y-auto scrollbar-none space-y-4 pr-1 pb-12">
             
-            {/* Desktop Month Selector (Sticky at top of side column) */}
+            {/* Desktop Month Selector */}
             <section>
               <MonthSelector
                 selectedYear={selectedYear}
