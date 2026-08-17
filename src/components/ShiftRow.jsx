@@ -188,13 +188,13 @@ export default function ShiftRow({
     <div className={`rounded-2xl border transition-all duration-200 relative ${cardBorderAndBg}`}>
       
       {/* 📱 MOBILE VIEW (< md) */}
-      <div className="md:hidden p-3.5 space-y-3">
+      <div className="md:hidden p-3 sm:p-4 space-y-2.5">
         
-        {/* Header: Day number + Day Name + Status Pill + Mode Switcher + OFF Toggle */}
+        {/* Header Row: Day badge + Day Name & Holiday + OFF Toggle */}
         <div className="flex items-center justify-between gap-2">
           
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`flex flex-col items-center justify-center w-10 h-10 rounded-xl font-mono font-bold text-sm border shadow-sm shrink-0 ${
+            <div className={`flex flex-col items-center justify-center w-10 h-10 rounded-xl font-amount font-bold text-sm border shadow-sm shrink-0 ${
               isFilled
                 ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-500/40'
                 : day.isHoliday 
@@ -214,21 +214,6 @@ export default function ShiftRow({
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                   {day.dayNameFull}
                 </span>
-                
-                {/* Visual Status Indicator Pill */}
-                {isFilled ? (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                    <CheckCircle2 className="w-2.5 h-2.5" /> {t.filledBadge}
-                  </span>
-                ) : isPending && day.isStandardWorkday ? (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
-                    {t.pendingBadge}
-                  </span>
-                ) : isOff ? (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    {t.restBadge}
-                  </span>
-                ) : null}
 
                 {day.isWeekend && (
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20">
@@ -250,62 +235,76 @@ export default function ShiftRow({
             </div>
           </div>
 
-          {/* Header Actions: Mode toggle + OFF toggle */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {!isOff && (
-              <div className="flex items-center bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shadow-sm text-[11px]">
-                <button
-                  onClick={(e) => handleModeChange('split', e)}
-                  className={`px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-all ${
-                    mode === 'split' 
-                      ? 'bg-cyan-600 text-white shadow-sm' 
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                  title={t.splitMode}
-                >
-                  <Split className="w-3 h-3" />
-                  <span>Split</span>
-                </button>
-
-                <button
-                  onClick={(e) => handleModeChange('continuous', e)}
-                  className={`px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-all ${
-                    mode === 'continuous' 
-                      ? 'bg-emerald-600 text-white shadow-sm' 
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                  title={t.continuousMode}
-                >
-                  <AlignJustify className="w-3 h-3" />
-                  <span>Cont.</span>
-                </button>
-              </div>
+          {/* Quick OFF / Activate Toggle */}
+          <button
+            onClick={handleToggleOff}
+            className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target shrink-0 flex items-center gap-1 ${
+              isOff
+                ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+                : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
+            }`}
+            title={isOff ? 'Turn day ON' : 'Set as OFF day'}
+          >
+            {isOff ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t.activateDay}</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-slate-500" />
+                <span>{t.setOff}</span>
+              </>
             )}
-
-            <button
-              onClick={handleToggleOff}
-              className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target shrink-0 flex items-center gap-1 ${
-                isOff
-                  ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
-                  : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
-              }`}
-              title={isOff ? 'Turn day ON' : 'Set as OFF day'}
-            >
-              {isOff ? (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{t.activateDay}</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{t.setOff}</span>
-                </>
-              )}
-            </button>
-          </div>
+          </button>
 
         </div>
+
+        {/* Sub-Header Row (When Active): Status Badge + Mode Switcher */}
+        {!isOff && (
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {isFilled ? (
+                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                  <CheckCircle2 className="w-2.5 h-2.5" /> {t.filledBadge}
+                </span>
+              ) : isPending && day.isStandardWorkday ? (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+                  {t.pendingBadge}
+                </span>
+              ) : null}
+            </div>
+
+            {/* Mode Toggle Pills */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shadow-sm text-[11px]">
+              <button
+                onClick={(e) => handleModeChange('split', e)}
+                className={`px-2 py-0.5 rounded-lg font-semibold flex items-center gap-1 transition-all ${
+                  mode === 'split' 
+                    ? 'bg-cyan-600 text-white shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+                title={t.splitMode}
+              >
+                <Split className="w-3 h-3" />
+                <span>Split</span>
+              </button>
+
+              <button
+                onClick={(e) => handleModeChange('continuous', e)}
+                className={`px-2 py-0.5 rounded-lg font-semibold flex items-center gap-1 transition-all ${
+                  mode === 'continuous' 
+                    ? 'bg-emerald-600 text-white shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+                title={t.continuousMode}
+              >
+                <AlignJustify className="w-3 h-3" />
+                <span>Cont.</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* TIME INPUTS SECTION WITH MINIMAL BUBBLES */}
         {!isOff ? (
@@ -340,7 +339,7 @@ export default function ShiftRow({
                           e.preventDefault();
                           e.stopPropagation();
                         }}
-                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 touch-manipulation cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-amount font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 touch-manipulation cursor-pointer"
                       >
                         {time}
                       </button>
@@ -372,7 +371,7 @@ export default function ShiftRow({
                         onEnterPress={() => advanceFromField('start1')}
                         onFocus={() => onSetActiveField && onSetActiveField('start1')}
                         placeholder="00:00"
-                        className={`w-16 ${activeField === 'start1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                        className={`w-16 font-amount ${activeField === 'start1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
                       <span className="text-slate-400 text-xs font-bold">→</span>
                       <SmartTimeInput
@@ -383,7 +382,7 @@ export default function ShiftRow({
                         onEnterPress={() => advanceFromField('end1')}
                         onFocus={() => onSetActiveField && onSetActiveField('end1')}
                         placeholder="00:00"
-                        className={`w-16 ${activeField === 'end1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                        className={`w-16 font-amount ${activeField === 'end1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
                     </div>
                   </div>
@@ -404,7 +403,7 @@ export default function ShiftRow({
                         onEnterPress={() => advanceFromField('start2')}
                         onFocus={() => onSetActiveField && onSetActiveField('start2')}
                         placeholder="00:00"
-                        className={`w-16 ${activeField === 'start2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                        className={`w-16 font-amount ${activeField === 'start2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
                       <span className="text-slate-400 text-xs font-bold">→</span>
                       <SmartTimeInput
@@ -415,7 +414,7 @@ export default function ShiftRow({
                         onEnterPress={() => advanceFromField('end2')}
                         onFocus={() => onSetActiveField && onSetActiveField('end2')}
                         placeholder="00:00"
-                        className={`w-16 ${activeField === 'end2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                        className={`w-16 font-amount ${activeField === 'end2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                       />
                     </div>
                   </div>
@@ -437,7 +436,7 @@ export default function ShiftRow({
                       onEnterPress={() => advanceFromField('continuousStart')}
                       onFocus={() => onSetActiveField && onSetActiveField('continuousStart')}
                       placeholder="00:00"
-                      className="w-20"
+                      className="w-20 font-amount"
                     />
                     <span className="text-slate-400 text-xs font-bold">→</span>
                     <SmartTimeInput
@@ -448,7 +447,7 @@ export default function ShiftRow({
                       onEnterPress={() => advanceFromField('continuousEnd')}
                       onFocus={() => onSetActiveField && onSetActiveField('continuousEnd')}
                       placeholder="00:00"
-                      className="w-20"
+                      className="w-20 font-amount"
                     />
                   </div>
                 </div>
@@ -478,7 +477,7 @@ export default function ShiftRow({
         <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/60 text-xs">
           <div>
             {breakHours > 0 && !isOff && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-mono border border-slate-200 dark:border-slate-700">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-amount border border-slate-200 dark:border-slate-700">
                 <Coffee className="w-3 h-3 text-amber-500" />
                 {t.breakPill} {decimalToTimeString(breakHours, true)}
               </span>
@@ -506,7 +505,7 @@ export default function ShiftRow({
               </button>
             )}
 
-            <div className={`min-w-[68px] text-center px-2.5 py-1 rounded-xl font-mono font-bold text-xs border shadow-sm ${
+            <div className={`min-w-[68px] text-center px-2.5 py-1 rounded-xl font-amount font-bold text-xs border shadow-sm ${
               workedHours >= 8 
                 ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-500/40' 
                 : workedHours > 0 
@@ -527,8 +526,8 @@ export default function ShiftRow({
         <div className="flex items-center justify-between gap-3">
           
           {/* Day & Date Column */}
-          <div className="flex items-center gap-3 min-w-[200px]">
-            <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl font-mono font-bold text-base border shadow-sm shrink-0 ${
+          <div className="flex items-center gap-3 min-w-[190px]">
+            <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl font-amount font-bold text-base border shadow-sm shrink-0 ${
               isFilled
                 ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-500/40'
                 : day.isHoliday 
@@ -586,7 +585,7 @@ export default function ShiftRow({
 
           {/* INPUTS / DISABLED VIEW */}
           {!isOff ? (
-            <div className="flex-1 flex flex-wrap items-center gap-2.5 relative">
+            <div className="flex-1 flex flex-wrap items-center gap-2 relative">
               
               {/* 🫧 DESKTOP FLOATING PURE BUBBLE PILL */}
               {currentTimes && (
@@ -614,7 +613,7 @@ export default function ShiftRow({
                           e.preventDefault();
                           e.stopPropagation();
                         }}
-                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-amount font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 cursor-pointer"
                       >
                         {time}
                       </button>
@@ -668,7 +667,7 @@ export default function ShiftRow({
                       onEnterPress={() => advanceFromField('start1')}
                       onFocus={() => onSetActiveField && onSetActiveField('start1')}
                       placeholder="00:00"
-                      className={`w-16 ${activeField === 'start1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                      className={`w-16 font-amount ${activeField === 'start1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
                     <span className="text-slate-400 text-xs font-bold">→</span>
                     <SmartTimeInput
@@ -679,12 +678,12 @@ export default function ShiftRow({
                       onEnterPress={() => advanceFromField('end1')}
                       onFocus={() => onSetActiveField && onSetActiveField('end1')}
                       placeholder="00:00"
-                      className={`w-16 ${activeField === 'end1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                      className={`w-16 font-amount ${activeField === 'end1' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
                   </div>
 
                   {breakHours > 0 && !isOff && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] border border-slate-200 dark:border-slate-700 font-mono shadow-sm">
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] border border-slate-200 dark:border-slate-700 font-amount shadow-sm">
                       <Coffee className="w-3 h-3 text-amber-500" />
                       <span>{t.breakPill} {decimalToTimeString(breakHours, true)}</span>
                     </div>
@@ -703,7 +702,7 @@ export default function ShiftRow({
                       onEnterPress={() => advanceFromField('start2')}
                       onFocus={() => onSetActiveField && onSetActiveField('start2')}
                       placeholder="00:00"
-                      className={`w-16 ${activeField === 'start2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                      className={`w-16 font-amount ${activeField === 'start2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
                     <span className="text-slate-400 text-xs font-bold">→</span>
                     <SmartTimeInput
@@ -714,7 +713,7 @@ export default function ShiftRow({
                       onEnterPress={() => advanceFromField('end2')}
                       onFocus={() => onSetActiveField && onSetActiveField('end2')}
                       placeholder="00:00"
-                      className={`w-16 ${activeField === 'end2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
+                      className={`w-16 font-amount ${activeField === 'end2' ? 'ring-2 ring-cyan-500/40 bg-cyan-50/50 dark:bg-cyan-950/40' : ''}`}
                     />
                   </div>
 
@@ -732,7 +731,7 @@ export default function ShiftRow({
                     onEnterPress={() => advanceFromField('continuousStart')}
                     onFocus={() => onSetActiveField && onSetActiveField('continuousStart')}
                     placeholder="00:00"
-                    className="w-20"
+                    className="w-20 font-amount"
                   />
                   <span className="text-slate-400 text-xs font-bold">→</span>
                   <SmartTimeInput
@@ -743,7 +742,7 @@ export default function ShiftRow({
                     onEnterPress={() => advanceFromField('continuousEnd')}
                     onFocus={() => onSetActiveField && onSetActiveField('continuousEnd')}
                     placeholder="00:00"
-                    className="w-20"
+                    className="w-20 font-amount"
                   />
                 </div>
               )}
@@ -811,7 +810,7 @@ export default function ShiftRow({
               )}
             </button>
 
-            <div className={`min-w-[72px] text-center px-2.5 py-1 rounded-xl font-mono font-bold text-xs border shadow-sm ${
+            <div className={`min-w-[72px] text-center px-2.5 py-1 rounded-xl font-amount font-bold text-xs border shadow-sm ${
               workedHours >= 8 
                 ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-500/40' 
                 : workedHours > 0 

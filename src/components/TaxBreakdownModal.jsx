@@ -62,7 +62,7 @@ export default function TaxBreakdownModal({
                   {lang === 'ro' ? 'Bază' : 'Base'} ({calcResult.regularGross.toFixed(2)} RON) + {lang === 'ro' ? 'Spor WE' : 'Weekend'} ({calcResult.weekendBonus.toFixed(2)} RON) + {lang === 'ro' ? 'Spor Sărbători' : 'Holiday'} ({calcResult.holidayBonus.toFixed(2)} RON) + {lang === 'ro' ? 'Suplimentare' : 'Overtime'} ({calcResult.overtimePay.toFixed(2)} RON)
                 </p>
               </div>
-              <span className="font-mono font-bold text-slate-900 dark:text-white text-sm shrink-0">
+              <span className="font-amount font-bold text-slate-900 dark:text-white text-sm shrink-0">
                 {formatCurrency(calcResult.totalGross, currency)}
               </span>
             </div>
@@ -75,7 +75,7 @@ export default function TaxBreakdownModal({
                   {lang === 'ro' ? 'Contribuția de Asigurări Sociale' : 'Social Security Contribution'} = {calcResult.totalGross.toFixed(2)} × 25%
                 </p>
               </div>
-              <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-sm shrink-0">
+              <span className="font-amount font-bold text-rose-600 dark:text-rose-400 text-sm shrink-0">
                 -{formatCurrency(calcResult.cas, currency)}
               </span>
             </div>
@@ -88,7 +88,7 @@ export default function TaxBreakdownModal({
                   {lang === 'ro' ? 'Contribuția de Asigurări Sociale de Sănătate' : 'Health Insurance Contribution'} = {calcResult.totalGross.toFixed(2)} × 10%
                 </p>
               </div>
-              <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-sm shrink-0">
+              <span className="font-amount font-bold text-rose-600 dark:text-rose-400 text-sm shrink-0">
                 -{formatCurrency(calcResult.cass, currency)}
               </span>
             </div>
@@ -101,7 +101,7 @@ export default function TaxBreakdownModal({
                   {calcResult.totalGross.toFixed(2)} - {calcResult.cas.toFixed(2)} - {calcResult.cass.toFixed(2)}
                 </p>
               </div>
-              <span className="font-mono font-bold text-purple-700 dark:text-purple-300 text-sm shrink-0">
+              <span className="font-amount font-bold text-purple-700 dark:text-purple-300 text-sm shrink-0">
                 {formatCurrency(calcResult.taxableBase, currency)}
               </span>
             </div>
@@ -114,7 +114,7 @@ export default function TaxBreakdownModal({
                   {calcResult.taxableBase.toFixed(2)} × 10%
                 </p>
               </div>
-              <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-sm shrink-0">
+              <span className="font-amount font-bold text-rose-600 dark:text-rose-400 text-sm shrink-0">
                 -{formatCurrency(calcResult.impozit, currency)}
               </span>
             </div>
@@ -127,7 +127,7 @@ export default function TaxBreakdownModal({
                   {calcResult.totalGross.toFixed(2)} - CAS - CASS - {lang === 'ro' ? 'Impozit' : 'Tax'}
                 </p>
               </div>
-              <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-base sm:text-lg shrink-0">
+              <span className="font-amount font-extrabold text-emerald-600 dark:text-emerald-400 text-base sm:text-lg shrink-0">
                 {formatCurrency(calcResult.netSalary, currency)}
               </span>
             </div>

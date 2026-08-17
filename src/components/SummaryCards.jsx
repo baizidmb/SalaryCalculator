@@ -75,7 +75,7 @@ export default function SummaryCards({
         {/* Big Glowing Amount with Gold Gradient */}
         <div className="space-y-2 py-0.5">
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl xs:text-4xl sm:text-5xl font-extrabold tracking-tight font-mono text-gold-gradient">
+            <span className="text-3xl xs:text-4xl sm:text-5xl font-extrabold tracking-tight font-amount text-gold-gradient">
               {formatCurrency(calcResult.netSalary, currency)}
             </span>
           </div>
@@ -83,11 +83,11 @@ export default function SummaryCards({
           {/* Bonus difference indicator */}
           <div className="flex items-center gap-2 text-xs">
             {netBonusDifference > 0 ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-400/40 font-semibold font-mono text-[11px] sm:text-xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-400/40 font-semibold font-amount text-[11px] sm:text-xs">
                 <TrendingUp className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> +{formatCurrency(netBonusDifference, currency)} {t.bonusesAndOvertime}
               </span>
             ) : netBonusDifference < 0 ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-400/30 font-semibold font-mono text-[11px] sm:text-xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-400/30 font-semibold font-amount text-[11px] sm:text-xs">
                 <AlertCircle className="w-3.5 h-3.5 text-rose-500" /> {t.belowNormBy}: {formatCurrency(Math.abs(netBonusDifference), currency)}
               </span>
             ) : (
@@ -101,7 +101,7 @@ export default function SummaryCards({
         {/* Bottom stats & celebration button */}
         <div className="pt-3.5 border-t border-amber-200/60 dark:border-slate-800/80 flex items-center justify-between">
           <div className="text-xs text-slate-600 dark:text-slate-400">
-            {t.totalGrossLabel} <strong className="font-mono font-bold text-slate-900 dark:text-slate-100">{formatCurrency(calcResult.totalGross, currency)}</strong>
+            {t.totalGrossLabel} <strong className="font-amount font-bold text-slate-900 dark:text-slate-100">{formatCurrency(calcResult.totalGross, currency)}</strong>
           </div>
 
           <button

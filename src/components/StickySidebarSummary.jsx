@@ -7,7 +7,6 @@ import {
   CalendarDays, 
   Sparkles, 
   Sliders, 
-  FileText, 
   Download, 
   ShieldCheck,
   AlertCircle
@@ -45,25 +44,25 @@ export default function StickySidebarSummary({
   const netBonusDifference = calcResult.netSalary - calcResult.standardNetBase;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[calc(100vh-6.5rem)] overflow-y-auto scrollbar-none pr-0.5">
       
       {/* 🌟 1. HERO FINANCIAL CARD (STICKY HEADLINER) */}
-      <div className="liquid-glass-elevated rounded-3xl p-5 relative overflow-hidden shadow-md">
+      <div className="liquid-glass-elevated rounded-3xl p-5 sm:p-6 relative overflow-hidden shadow-lg border border-white/90 dark:border-white/20">
         
         {/* Subtle glowing ambient accent */}
         <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-400/20 dark:bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
         {/* Header: Title + Currency Switcher */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-600 dark:text-amber-400 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-600 dark:text-amber-400 shadow-sm">
               <Wallet className="w-4 h-4" />
             </div>
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-700 dark:text-amber-400 block">
                 {t.netTakeHome}
               </span>
-              <h3 className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200">
                 {t.cleanNetIncome}
               </h3>
             </div>
@@ -75,28 +74,28 @@ export default function StickySidebarSummary({
             title="Toggle Currency (RON / EUR)"
           >
             <Coins className="w-3.5 h-3.5 text-amber-500" />
-            <span>{currency}</span>
+            <span className="font-mono">{currency}</span>
           </button>
         </div>
 
-        {/* Big Glowing Net Salary */}
-        <div className="space-y-1.5 py-1">
-          <div className="text-3xl xl:text-4xl font-extrabold tracking-tight font-mono text-gold-gradient">
+        {/* Big Glowing Modern Amount */}
+        <div className="space-y-2 py-1">
+          <div className="text-3xl xl:text-4xl font-extrabold tracking-tight font-amount text-slate-900 dark:text-white">
             {formatCurrency(calcResult.netSalary, currency)}
           </div>
 
           {/* Bonus / Deficit Subtitle */}
           <div>
             {netBonusDifference > 0 ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-400/40 font-semibold font-mono text-[11px]">
-                <TrendingUp className="w-3 h-3 text-amber-600 dark:text-amber-400" /> +{formatCurrency(netBonusDifference, currency)} {t.bonusesAndOvertime}
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-emerald-500/15 text-emerald-900 dark:text-emerald-300 border border-emerald-400/40 font-semibold font-amount text-xs">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> +{formatCurrency(netBonusDifference, currency)} {t.bonusesAndOvertime}
               </span>
             ) : netBonusDifference < 0 ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-400/30 font-semibold font-mono text-[11px]">
-                <AlertCircle className="w-3 h-3 text-rose-500" /> {t.belowNormBy}: {formatCurrency(Math.abs(netBonusDifference), currency)}
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-400/30 font-semibold font-amount text-xs">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-500" /> {t.belowNormBy}: {formatCurrency(Math.abs(netBonusDifference), currency)}
               </span>
             ) : (
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {t.standardFixedNorm}
               </span>
             )}
@@ -104,9 +103,9 @@ export default function StickySidebarSummary({
         </div>
 
         {/* Gross Breakdown Footer */}
-        <div className="mt-4 pt-3 border-t border-amber-200/60 dark:border-slate-800/80 flex items-center justify-between text-xs">
-          <span className="text-slate-600 dark:text-slate-400">{t.totalGrossLabel}</span>
-          <strong className="font-mono text-slate-900 dark:text-slate-100 font-bold">
+        <div className="mt-4 pt-3.5 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs">
+          <span className="text-slate-600 dark:text-slate-400 font-medium">{t.totalGrossLabel}</span>
+          <strong className="font-amount text-sm font-bold text-slate-900 dark:text-slate-100">
             {formatCurrency(calcResult.totalGross, currency)}
           </strong>
         </div>
@@ -115,7 +114,7 @@ export default function StickySidebarSummary({
 
 
       {/* ⏱️ 2. MONTHLY WORKED HOURS & NORM PROGRESS */}
-      <div className="liquid-glass rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5">
+      <div className="liquid-glass rounded-3xl p-5 shadow-sm space-y-3.5">
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -127,13 +126,13 @@ export default function StickySidebarSummary({
             </span>
           </div>
 
-          <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span className="font-amount text-xs font-bold text-slate-700 dark:text-slate-300">
             {calcResult.totalWorkedHours}h <span className="text-slate-400 font-normal">/ {calcResult.normHours}h</span>
           </span>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-slate-200/80 dark:bg-slate-800/80 rounded-full h-2 overflow-hidden shadow-inner">
+        <div className="w-full bg-slate-200/80 dark:bg-slate-800/80 rounded-full h-2.5 overflow-hidden shadow-inner">
           <div 
             className={`h-full rounded-full transition-all duration-500 ${
               isNormFulfilled 
@@ -147,30 +146,30 @@ export default function StickySidebarSummary({
         {/* Metrics Pill Grid */}
         <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
           
-          <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-            <span className="text-[10px] text-slate-400 block font-medium">Weekend:</span>
-            <span className="font-mono font-bold text-cyan-700 dark:text-cyan-400">
-              {calcResult.weekendHours}h <span className="text-[10px] text-slate-500">({formatCurrency(calcResult.weekendBonus, currency)})</span>
+          <div className="p-2.5 rounded-2xl bg-white/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <span className="text-[10px] text-slate-400 block font-semibold uppercase">Weekend:</span>
+            <span className="font-amount font-bold text-cyan-700 dark:text-cyan-400 text-xs">
+              {calcResult.weekendHours}h <span className="text-[10px] text-slate-500 font-normal">({formatCurrency(calcResult.weekendBonus, currency)})</span>
             </span>
           </div>
 
-          <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-            <span className="text-[10px] text-slate-400 block font-medium">Holiday:</span>
-            <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
-              {calcResult.holidayHours}h <span className="text-[10px] text-slate-500">({formatCurrency(calcResult.holidayBonus, currency)})</span>
+          <div className="p-2.5 rounded-2xl bg-white/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <span className="text-[10px] text-slate-400 block font-semibold uppercase">Holiday:</span>
+            <span className="font-amount font-bold text-amber-700 dark:text-amber-400 text-xs">
+              {calcResult.holidayHours}h <span className="text-[10px] text-slate-500 font-normal">({formatCurrency(calcResult.holidayBonus, currency)})</span>
             </span>
           </div>
 
-          <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 col-span-2 flex items-center justify-between">
+          <div className="p-2.5 rounded-2xl bg-white/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 col-span-2 flex items-center justify-between shadow-sm">
             <div>
-              <span className="text-[10px] text-slate-400 block font-medium">{t.overtimeHours}:</span>
-              <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+              <span className="text-[10px] text-slate-400 block font-semibold uppercase">{t.overtimeHours}:</span>
+              <span className="font-amount font-bold text-emerald-700 dark:text-emerald-400 text-xs">
                 {calcResult.overtimeHours}h ({formatCurrency(calcResult.overtimePay, currency)})
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[9px] text-slate-400 block">Rate/hr:</span>
-              <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400">
+              <span className="text-[9px] text-slate-400 block font-medium">Hourly Base:</span>
+              <span className="font-amount text-xs font-bold text-cyan-600 dark:text-cyan-400">
                 {calcResult.hourlyBaseRate.toFixed(2)} RON/h
               </span>
             </div>
@@ -182,7 +181,7 @@ export default function StickySidebarSummary({
 
 
       {/* 🎛️ 3. INTERACTIVE SALARY ALLOWANCES TOGGLES */}
-      <div className="liquid-glass rounded-3xl p-4 sm:p-5 shadow-sm space-y-3">
+      <div className="liquid-glass rounded-3xl p-5 shadow-sm space-y-3.5">
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -201,19 +200,19 @@ export default function StickySidebarSummary({
           {/* Weekend Toggle */}
           <div 
             onClick={() => onToggleChange('weekend')}
-            className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+            className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
               toggles.weekend 
-                ? 'bg-cyan-50/60 dark:bg-cyan-950/20 border-cyan-500/40 shadow-sm' 
+                ? 'bg-cyan-50/70 dark:bg-cyan-950/25 border-cyan-500/40 shadow-sm' 
                 : 'bg-slate-50/50 dark:bg-slate-950/40 border-slate-200/80 dark:border-slate-800 opacity-60'
             }`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <CalendarDays className={`w-3.5 h-3.5 ${toggles.weekend ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400'}`} />
+            <div className="flex items-center gap-2.5 min-w-0">
+              <CalendarDays className={`w-4 h-4 shrink-0 ${toggles.weekend ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400'}`} />
               <div className="min-w-0">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block truncate">
                   {t.weekendToggleTitle}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[10px] text-slate-500 font-amount">
                   +30% ({calcResult.weekendHours}h = {formatCurrency(calcResult.weekendBonus, currency)})
                 </span>
               </div>
@@ -227,19 +226,19 @@ export default function StickySidebarSummary({
           {/* Holiday Toggle */}
           <div 
             onClick={() => onToggleChange('holiday')}
-            className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+            className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
               toggles.holiday 
-                ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-500/40 shadow-sm' 
+                ? 'bg-amber-50/70 dark:bg-amber-950/25 border-amber-500/40 shadow-sm' 
                 : 'bg-slate-50/50 dark:bg-slate-950/40 border-slate-200/80 dark:border-slate-800 opacity-60'
             }`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <Sparkles className={`w-3.5 h-3.5 ${toggles.holiday ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Sparkles className={`w-4 h-4 shrink-0 ${toggles.holiday ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
               <div className="min-w-0">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block truncate">
                   {t.holidayToggleTitle}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[10px] text-slate-500 font-amount">
                   +100% ({calcResult.holidayHours}h = {formatCurrency(calcResult.holidayBonus, currency)})
                 </span>
               </div>
@@ -253,19 +252,19 @@ export default function StickySidebarSummary({
           {/* Overtime Toggle */}
           <div 
             onClick={() => onToggleChange('overtime')}
-            className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+            className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
               toggles.overtime 
-                ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-500/40 shadow-sm' 
+                ? 'bg-emerald-50/70 dark:bg-emerald-950/25 border-emerald-500/40 shadow-sm' 
                 : 'bg-slate-50/50 dark:bg-slate-950/40 border-slate-200/80 dark:border-slate-800 opacity-60'
             }`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <TrendingUp className={`w-3.5 h-3.5 ${toggles.overtime ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+            <div className="flex items-center gap-2.5 min-w-0">
+              <TrendingUp className={`w-4 h-4 shrink-0 ${toggles.overtime ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
               <div className="min-w-0">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block truncate">
                   {t.overtimeToggleTitle}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[10px] text-slate-500 font-amount">
                   +75% ({calcResult.overtimeHours}h = {formatCurrency(calcResult.overtimePay, currency)})
                 </span>
               </div>
@@ -279,7 +278,7 @@ export default function StickySidebarSummary({
         </div>
 
         {/* Overtime Calculation Basis Switcher */}
-        <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800">
+        <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
             {t.overtimeModeLabel}
           </span>

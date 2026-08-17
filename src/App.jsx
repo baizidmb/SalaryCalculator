@@ -356,7 +356,7 @@ export default function App() {
       />
 
       {/* Main Responsive Body Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 pb-24 md:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 pb-32 sm:pb-24 md:pb-12">
         
         {/* 🌟 SIDE-BY-SIDE INTERACTIVE DESKTOP LAYOUT (lg+) & CLEAN VERTICAL FLOW ON MOBILE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
