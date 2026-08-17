@@ -405,8 +405,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col antialiased bg-[#FFFFFF] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative">
+    <div className="min-h-screen flex flex-col antialiased bg-[#f4f6f9] dark:bg-[#060a12] text-slate-900 dark:text-slate-100 transition-colors duration-300 relative overflow-x-hidden">
       
+      {/* Seamless Ambient Background Glows */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-400/15 dark:bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-32 w-96 h-96 bg-emerald-400/15 dark:bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-blue-400/15 dark:bg-blue-500/10 rounded-full blur-3xl" />
+      </div>
+
       {/* Top Navigation & App Bar */}
       <Header
         lang={lang}
