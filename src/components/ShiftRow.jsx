@@ -100,15 +100,21 @@ export default function ShiftRow({
       } else if (fromField === 'start2') {
         focusInput(end2Ref, 'end2');
       } else if (fromField === 'end2') {
-        if (onSetActiveField) onSetActiveField(null);
-        if (onFocusNextDay) onFocusNextDay(day.dateStr);
+        if (onFocusNextDay) {
+          onFocusNextDay(day.dateStr);
+        } else if (onSetActiveField) {
+          setTimeout(() => onSetActiveField(null), 100);
+        }
       }
     } else {
       if (fromField === 'continuousStart') {
         focusInput(continuousEndRef, 'continuousEnd');
       } else if (fromField === 'continuousEnd') {
-        if (onSetActiveField) onSetActiveField(null);
-        if (onFocusNextDay) onFocusNextDay(day.dateStr);
+        if (onFocusNextDay) {
+          onFocusNextDay(day.dateStr);
+        } else if (onSetActiveField) {
+          setTimeout(() => onSetActiveField(null), 100);
+        }
       }
     }
   };
@@ -184,7 +190,7 @@ export default function ShiftRow({
       {/* 📱 MOBILE VIEW (< md) */}
       <div className="md:hidden p-3.5 space-y-3">
         
-        {/* Header: Day number + Day Name + Status Pill + OFF Toggle */}
+        {/* Header: Day number + Day Name + Status Pill + Mode Switcher + OFF Toggle */}
         <div className="flex items-center justify-between gap-2">
           
           <div className="flex items-center gap-2.5 min-w-0">
@@ -244,28 +250,60 @@ export default function ShiftRow({
             </div>
           </div>
 
-          {/* Quick OFF / Activate Toggle */}
-          <button
-            onClick={handleToggleOff}
-            className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target shrink-0 flex items-center gap-1 ${
-              isOff
-                ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
-                : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
-            }`}
-            title={isOff ? 'Turn day ON' : 'Set as OFF day'}
-          >
-            {isOff ? (
-              <>
-                <Sun className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{t.activateDay}</span>
-              </>
-            ) : (
-              <>
-                <Moon className="w-3.5 h-3.5 text-slate-500" />
-                <span>{t.setOff}</span>
-              </>
+          {/* Header Actions: Mode toggle + OFF toggle */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {!isOff && (
+              <div className="flex items-center bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shadow-sm text-[11px]">
+                <button
+                  onClick={(e) => handleModeChange('split', e)}
+                  className={`px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-all ${
+                    mode === 'split' 
+                      ? 'bg-cyan-600 text-white shadow-sm' 
+                      : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                  title={t.splitMode}
+                >
+                  <Split className="w-3 h-3" />
+                  <span>Split</span>
+                </button>
+
+                <button
+                  onClick={(e) => handleModeChange('continuous', e)}
+                  className={`px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-all ${
+                    mode === 'continuous' 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                  title={t.continuousMode}
+                >
+                  <AlignJustify className="w-3 h-3" />
+                  <span>Cont.</span>
+                </button>
+              </div>
             )}
-          </button>
+
+            <button
+              onClick={handleToggleOff}
+              className={`px-2.5 py-1 text-xs font-bold rounded-xl border shadow-sm transition-all touch-target shrink-0 flex items-center gap-1 ${
+                isOff
+                  ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+                  : 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-rose-300 border-slate-200 dark:border-slate-800'
+              }`}
+              title={isOff ? 'Turn day ON' : 'Set as OFF day'}
+            >
+              {isOff ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{t.activateDay}</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-slate-500" />
+                  <span>{t.setOff}</span>
+                </>
+              )}
+            </button>
+          </div>
 
         </div>
 
@@ -273,50 +311,27 @@ export default function ShiftRow({
         {!isOff ? (
           <div className="space-y-2.5 pt-1 relative">
             
-            {/* Mode Switcher */}
-            <div className="grid grid-cols-2 bg-slate-100 dark:bg-slate-950/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shadow-sm text-xs">
-              <button
-                onClick={(e) => handleModeChange('split', e)}
-                className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
-                  mode === 'split' 
-                    ? 'bg-cyan-600 text-white shadow-sm' 
-                    : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                <Split className="w-3.5 h-3.5" />
-                <span>{t.splitMode}</span>
-              </button>
-
-              <button
-                onClick={(e) => handleModeChange('continuous', e)}
-                className={`py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1 transition-all ${
-                  mode === 'continuous' 
-                    ? 'bg-emerald-600 text-white shadow-sm' 
-                    : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                <AlignJustify className="w-3.5 h-3.5" />
-                <span>{t.continuousMode}</span>
-              </button>
-            </div>
-
             {/* Inputs Container with Relative Anchor */}
             <div className="relative">
               
-              {/* 🫧 FLOATING SUPER MINIMAL HIGH-RADIUS BUBBLE PILL (PURE TIMES ONLY, ZERO CLUTTER) */}
+              {/* 🫧 FLOATING PURE MINIMAL HIGH-RADIUS BUBBLE PILL (ZERO CLUTTER, 100% GHOST-CLICK PROOF) */}
               {currentTimes && (
                 <div 
                   onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                   onTouchStart={(e) => { e.stopPropagation(); }}
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  className="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
+                  className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
                 >
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/20 max-w-[340px] overflow-x-auto whitespace-nowrap scrollbar-none">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-2xl bg-white/90 dark:bg-slate-900/95 border border-white/90 dark:border-white/20 shadow-[0_16px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/20 max-w-[340px] overflow-x-auto whitespace-nowrap scrollbar-none">
                     {currentTimes.map((time) => (
                       <button
                         key={time}
                         type="button"
                         onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onPointerUp={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleSelectSuggestionTime(time);
@@ -325,7 +340,7 @@ export default function ShiftRow({
                           e.preventDefault();
                           e.stopPropagation();
                         }}
-                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 touch-manipulation cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 touch-manipulation cursor-pointer"
                       >
                         {time}
                       </button>
@@ -333,7 +348,7 @@ export default function ShiftRow({
                   </div>
 
                   {/* Micro notch pointing down */}
-                  <div className="w-2.5 h-2.5 rotate-45 -mt-1 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
+                  <div className="w-2.5 h-2.5 rotate-45 -mt-1 bg-white/90 dark:bg-slate-900/95 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
                 </div>
               )}
 
@@ -579,14 +594,18 @@ export default function ShiftRow({
                   onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                   onTouchStart={(e) => { e.stopPropagation(); }}
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  className="absolute bottom-full mb-2.5 left-0 z-50 flex flex-col items-start animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
+                  className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex flex-col items-start animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
                 >
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-2xl bg-white/80 dark:bg-slate-900/90 border border-white/90 dark:border-white/20 shadow-[0_16px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/20 overflow-x-auto whitespace-nowrap scrollbar-none">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-2xl bg-white/90 dark:bg-slate-900/95 border border-white/90 dark:border-white/20 shadow-[0_16px_36px_rgba(6,182,212,0.28)] shadow-cyan-500/20 overflow-x-auto whitespace-nowrap scrollbar-none">
                     {currentTimes.map((time) => (
                       <button
                         key={time}
                         type="button"
                         onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onPointerUp={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleSelectSuggestionTime(time);
@@ -595,13 +614,13 @@ export default function ShiftRow({
                           e.preventDefault();
                           e.stopPropagation();
                         }}
-                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white/90 dark:bg-slate-800/90 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-cyan-400 hover:to-emerald-400 hover:text-white dark:hover:text-white rounded-full border border-white/90 dark:border-slate-700/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),0_4px_10px_rgba(0,0,0,0.06)] active:scale-90 transition-all duration-150 shrink-0 cursor-pointer"
                       >
                         {time}
                       </button>
                     ))}
                   </div>
-                  <div className="w-2.5 h-2.5 rotate-45 ml-8 -mt-1 bg-white/80 dark:bg-slate-900/90 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
+                  <div className="w-2.5 h-2.5 rotate-45 ml-8 -mt-1 bg-white/90 dark:bg-slate-900/95 border-r border-b border-white/90 dark:border-white/20 shadow-sm" />
                 </div>
               )}
 

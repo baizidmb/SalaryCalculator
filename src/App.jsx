@@ -4,6 +4,7 @@ import MonthSelector from './components/MonthSelector';
 import AllowanceToggles from './components/AllowanceToggles';
 import SummaryCards from './components/SummaryCards';
 import DutyGrid from './components/DutyGrid';
+import StickySidebarSummary from './components/StickySidebarSummary';
 import TaxBreakdownModal from './components/TaxBreakdownModal';
 import SettingsModal from './components/SettingsModal';
 import MobileSummaryBar from './components/MobileSummaryBar';
@@ -41,7 +42,7 @@ export default function App() {
     }
   });
 
-  // Apply theme class to document root element
+  // Update root html class for dark mode theme
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -49,35 +50,35 @@ export default function App() {
     } else {
       root.classList.remove('dark');
     }
-    try {
-      localStorage.setItem('shiftpay_theme', theme);
-    } catch (e) {
-      console.error(e);
-    }
+    localStorage.setItem('shiftpay_theme', theme);
   }, [theme]);
 
-  // Sync language to localStorage
-  const handleLangToggle = () => {
-    const newLang = lang === 'en' ? 'ro' : 'en';
-    setLang(newLang);
-    try {
-      localStorage.setItem('shiftpay_lang', newLang);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  // Persist language
+  useEffect(() => {
+    localStorage.setItem('shiftpay_lang', lang);
+  }, [lang]);
+
+  // Persist overtime mode
+  useEffect(() => {
+    localStorage.setItem('shiftpay_overtime_mode', overtimeMode);
+  }, [overtimeMode]);
 
   const handleThemeToggle = () => {
-    setTheme(t => t === 'light' ? 'dark' : 'light');
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleLangToggle = () => {
+    setLang(prev => prev === 'en' ? 'ro' : 'en');
   };
 
   const handleOvertimeModeChange = (mode) => {
     setOvertimeMode(mode);
-    try {
-      localStorage.setItem('shiftpay_overtime_mode', mode);
-    } catch (e) {
-      console.error(e);
-    }
+    // Also save in settings
+    setSettings(prev => {
+      const updated = { ...prev, overtimeMode: mode };
+      localStorage.setItem('shiftpay_settings', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const t = TRANSLATIONS[lang];
@@ -183,122 +184,48 @@ export default function App() {
           };
         });
         setShifts(initialShifts);
-        localStorage.setItem(storageKey, JSON.stringify(initialShifts));
       }
     } catch (e) {
-      console.error('LocalStorage read error:', e);
-      setShifts({});
+      console.error('Error loading shifts from localStorage', e);
     }
   }, [selectedYear, selectedMonth, days]);
 
-  // Save shifts to localStorage atomically
-  const handleShiftChange = (dateStr, shiftData) => {
-    setShifts(prevShifts => {
+  // Handle single shift change and auto-save
+  const handleShiftChange = (dateStr, updatedShift) => {
+    setShifts(prev => {
       const updated = {
-        ...prevShifts,
-        [dateStr]: shiftData
+        ...prev,
+        [dateStr]: updatedShift
       };
       const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
       try {
         localStorage.setItem(storageKey, JSON.stringify(updated));
-      } catch (e) {
-        console.error('LocalStorage write error:', e);
+      } catch (err) {
+        console.error('Error auto-saving shift entry', err);
       }
       return updated;
     });
   };
 
-  // Toggle update & save
-  const handleToggleChange = (toggleId, value) => {
-    const updated = { ...toggles, [toggleId]: value };
-    setToggles(updated);
-    try {
+  // Allowance toggles handler
+  const handleToggleChange = (toggleKey) => {
+    setToggles(prev => {
+      const updated = {
+        ...prev,
+        [toggleKey]: !prev[toggleKey]
+      };
       localStorage.setItem('shiftpay_toggles', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage write error:', e);
-    }
+      return updated;
+    });
   };
 
-  // Settings update & save
+  // Settings save handler
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
     if (newSettings.overtimeMode) {
       setOvertimeMode(newSettings.overtimeMode);
     }
-    try {
-      localStorage.setItem('shiftpay_settings', JSON.stringify(newSettings));
-    } catch (e) {
-      console.error('LocalStorage write error:', e);
-    }
-  };
-
-  // Bulk Actions
-  const handleBulkFillWeekdaysStandard = () => {
-    setShifts(prev => {
-      const updated = { ...prev };
-      days.forEach(d => {
-        if (d.isStandardWorkday) {
-          updated[d.dateStr] = {
-            mode: 'continuous',
-            isOff: false,
-            continuousStart: '09:00',
-            continuousEnd: '17:00',
-            start1: '',
-            end1: '',
-            start2: '',
-            end2: ''
-          };
-        } else {
-          updated[d.dateStr] = {
-            ...updated[d.dateStr],
-            isOff: true
-          };
-        }
-      });
-      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const handleBulkFillSplitTemplate = () => {
-    setShifts(prev => {
-      const updated = { ...prev };
-      days.forEach(d => {
-        if (d.isStandardWorkday) {
-          updated[d.dateStr] = {
-            mode: 'split',
-            isOff: false,
-            start1: '11:00',
-            end1: '17:00',
-            start2: '18:30',
-            end2: '23:00',
-            continuousStart: '',
-            continuousEnd: ''
-          };
-        }
-      });
-      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const handleSetWeekendsOff = () => {
-    setShifts(prev => {
-      const updated = { ...prev };
-      days.forEach(d => {
-        if (d.isWeekend) {
-          updated[d.dateStr] = {
-            ...updated[d.dateStr],
-            isOff: true
-          };
-        }
-      });
-      const storageKey = `shiftpay_shifts_${selectedYear}_${selectedMonth}`;
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-      return updated;
-    });
+    localStorage.setItem('shiftpay_settings', JSON.stringify(newSettings));
   };
 
   const handleClearMonth = () => {
@@ -307,7 +234,7 @@ export default function App() {
       days.forEach(d => {
         updated[d.dateStr] = {
           mode: 'split',
-          isOff: true,
+          isOff: d.isWeekend,
           start1: '',
           end1: '',
           start2: '',
@@ -429,58 +356,83 @@ export default function App() {
       />
 
       {/* Main Responsive Body Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 md:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 pb-24 md:pb-8">
         
-        {/* 1. Month Navigation & Norm Breakdown */}
-        <section>
-          <MonthSelector
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            onYearChange={setSelectedYear}
-            onMonthChange={setSelectedMonth}
-            lang={lang}
-          />
-        </section>
+        {/* 🌟 SIDE-BY-SIDE INTERACTIVE DESKTOP LAYOUT (lg+) & CLEAN VERTICAL FLOW ON MOBILE */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* ⬅️ LEFT MAIN WORKSPACE (lg: 7 cols / xl: 8 cols): MONTH SELECTOR + DUTY TIMESHEET */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-5">
+            
+            {/* 1. Month Navigation & Norm Info */}
+            <section>
+              <MonthSelector
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+                onYearChange={setSelectedYear}
+                onMonthChange={setSelectedMonth}
+                lang={lang}
+              />
+            </section>
 
-        {/* 2. Financial Hero & Hours Breakdown Cards */}
-        <section>
-          <SummaryCards
-            calcResult={calcResult}
-            currency={currency}
-            onCurrencyToggle={() => setCurrency(c => c === 'RON' ? 'EUR' : 'RON')}
-            onOpenTaxDetails={() => setIsTaxModalOpen(true)}
-            lang={lang}
-          />
-        </section>
+            {/* 2. Duty Sheet & Shift Logging Grid (Up Front & Center) */}
+            <section>
+              <DutyGrid
+                days={days}
+                shifts={shifts}
+                onShiftChange={handleShiftChange}
+                onClearMonth={handleClearMonth}
+                onDuplicateRow={handleDuplicateRow}
+                onCopyFromPrevious={handleCopyFromPrevious}
+                lang={lang}
+              />
+            </section>
 
-        {/* 3. Independent Allowance Toggles & Overtime Mode */}
-        <section>
-          <AllowanceToggles
-            toggles={toggles}
-            onToggleChange={handleToggleChange}
-            calcResult={calcResult}
-            overtimeMode={overtimeMode}
-            onOvertimeModeChange={handleOvertimeModeChange}
-            currency={currency}
-            lang={lang}
-          />
-        </section>
+          </div>
 
-        {/* 4. Duty Sheet & Shift Logging Grid */}
-        <section>
-          <DutyGrid
-            days={days}
-            shifts={shifts}
-            onShiftChange={handleShiftChange}
-            onBulkFillWeekdaysStandard={handleBulkFillWeekdaysStandard}
-            onBulkFillSplitTemplate={handleBulkFillSplitTemplate}
-            onSetWeekendsOff={handleSetWeekendsOff}
-            onClearMonth={handleClearMonth}
-            onDuplicateRow={handleDuplicateRow}
-            onCopyFromPrevious={handleCopyFromPrevious}
-            lang={lang}
-          />
-        </section>
+          {/* ➡️ RIGHT STICKY FINANCIAL DASHBOARD (lg: 5 cols / xl: 4 cols): STICKS AS YOU LOG ON PC */}
+          <div className="hidden lg:block lg:col-span-5 xl:col-span-4 sticky top-24 self-start">
+            <StickySidebarSummary
+              calcResult={calcResult}
+              currency={currency}
+              onCurrencyToggle={() => setCurrency(c => c === 'RON' ? 'EUR' : 'RON')}
+              toggles={toggles}
+              onToggleChange={handleToggleChange}
+              overtimeMode={overtimeMode}
+              onOvertimeModeChange={handleOvertimeModeChange}
+              onOpenTaxDetails={() => setIsTaxModalOpen(true)}
+              onExportPDF={handleExportPDF}
+              isExporting={isExporting}
+              lang={lang}
+            />
+          </div>
+
+        </div>
+
+        {/* 📱 MOBILE SUMMARY & ALLOWANCES (Rendered below Duty Grid on Mobile, hidden on lg+) */}
+        <div className="lg:hidden space-y-5">
+          <section>
+            <SummaryCards
+              calcResult={calcResult}
+              currency={currency}
+              onCurrencyToggle={() => setCurrency(c => c === 'RON' ? 'EUR' : 'RON')}
+              onOpenTaxDetails={() => setIsTaxModalOpen(true)}
+              lang={lang}
+            />
+          </section>
+
+          <section>
+            <AllowanceToggles
+              toggles={toggles}
+              onToggleChange={handleToggleChange}
+              calcResult={calcResult}
+              overtimeMode={overtimeMode}
+              onOvertimeModeChange={handleOvertimeModeChange}
+              currency={currency}
+              lang={lang}
+            />
+          </section>
+        </div>
 
       </main>
 
